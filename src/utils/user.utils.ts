@@ -1,5 +1,5 @@
 export const isValidInputPassword = (password: string): boolean => {
-  if (password.length < 8) return false;
+  if (typeof password !== 'string' || password.length < 8) return false;
   let haveNumber = false;
   let haveLower = false;
   let haveUpper = false;

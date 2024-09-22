@@ -1,12 +1,13 @@
-export interface UserPayload {
-  id: string;
-  isAdmin: boolean;
-}
+import { Introduction } from './user.interface';
+import { ImageData } from './utils.interface';
 
 export interface TokenPayload {
-  id: string;
+  username: string;
   isAdmin: boolean;
   fullName: string;
-  avatarURL: string;
-  backgroundURL: string;
+  dateOfBirth: Date;
+  gender: string;
+  introduction: Introduction;
+  avatarImg: ImageData;
+  backgroundImg: ImageData;
 }

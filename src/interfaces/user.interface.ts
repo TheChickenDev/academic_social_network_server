@@ -1,4 +1,5 @@
 import { Document, ObjectId } from 'mongoose';
+import { ImageData } from './utils.interface';
 
 // job
 export interface Job extends Document {
@@ -46,17 +47,17 @@ export interface Introduction extends Document {
 
 // user
 export interface User extends Document {
-  _id: string;
   googleId: string;
   username: string;
   password: string;
   fullName: string;
   dateOfBirth: Date;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: 'Male' | 'Female' | 'Other' | '';
   introduction: Introduction;
-  avatarURL: string;
-  backgroundURL: string;
+  avatarImg: ImageData;
+  backgroundImg: ImageData;
   isAdmin: boolean;
+  isActive: boolean;
   accessToken: string;
   refreshToken: string;
   createdAt: Date;
@@ -64,14 +65,16 @@ export interface User extends Document {
 }
 
 // user input
-export interface UserInput extends Document {
+export interface CreateUserInput {
   username: string;
   password: string;
   confirmPassword: string;
+}
+
+export interface UpdateUserInput {
+  username: string;
   fullName: string;
   dateOfBirth: Date;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: 'Male' | 'Female' | 'Other' | '';
   introduction: Introduction;
-  avatar: ObjectId;
-  background: ObjectId;
 }
