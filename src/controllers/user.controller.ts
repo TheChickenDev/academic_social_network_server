@@ -40,16 +40,67 @@ export const login = async (request: Request, response: Response) => {
   }
 };
 
+// login with google
+export const loginWithGoogle = async (request: Request, response: Response) => {
+  try {
+    const result = await userService.loginWithGoogle(request.body);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(404).json({
+      message: error.message
+    });
+  }
+};
+
 // update user
 export const updateUser = async (request: Request, response: Response) => {
-  const cloudinaryUrls = request.body.cloudinaryUrls;
-  const publicIds = request.body.publicIds;
   try {
-    const result = await userService.updateUser(request.body, cloudinaryUrls, publicIds);
+    const result = await userService.updateUser(request.body);
     return response.status(201).json(result);
   } catch (error) {
-    if (publicIds && publicIds.length > 0) {
-      for (const publicId of publicIds) {
+    if (request.body.publicIds && request.body.publicIds.length > 0) {
+      for (const publicId of request.body.publicIds) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+    }
+    return response.status(404).json({
+      message: error.message
+    });
+  }
+};
+
+// block user
+export const blockUser = async (request: Request, response: Response) => {
+  try {
+    const result = await userService.blockUser(request.body);
+    return response.status(201).json(result);
+  } catch (error) {
+    return response.status(404).json({
+      message: error.message
+    });
+  }
+};
+
+// follow user
+export const followUser = async (request: Request, response: Response) => {
+  try {
+    const result = await userService.followUser(request.body);
+    return response.status(201).json(result);
+  } catch (error) {
+    return response.status(404).json({
+      message: error.message
+    });
+  }
+};
+
+// create group
+export const createGroup = async (request: Request, response: Response) => {
+  try {
+    const result = await userService.createGroup(request.body);
+    return response.status(201).json(result);
+  } catch (error) {
+    if (request.body.publicIds && request.body.publicIds.length > 0) {
+      for (const publicId of request.body.publicIds) {
         await cloudinary.uploader.destroy(publicId);
       }
     }

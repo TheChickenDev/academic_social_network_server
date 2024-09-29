@@ -1,5 +1,6 @@
 import { Document, ObjectId } from 'mongoose';
 import { ImageData } from './utils.interface';
+import { GroupMember } from './group.interface';
 
 // job
 export interface Job extends Document {
@@ -45,8 +46,17 @@ export interface Introduction extends Document {
   contact: Contact;
 }
 
+// follower
+export interface Follower extends Document {
+  followerUsername: string;
+  followDate: Date;
+  followerName: string;
+  followerAvatar: ImageData;
+}
+
 // user
 export interface User extends Document {
+  _id: ObjectId;
   googleId: string;
   username: string;
   password: string;
@@ -54,6 +64,8 @@ export interface User extends Document {
   dateOfBirth: Date;
   gender: 'Male' | 'Female' | 'Other' | '';
   introduction: Introduction;
+  followers: Follower[];
+  groups: GroupMember[];
   avatarImg: ImageData;
   backgroundImg: ImageData;
   isAdmin: boolean;
@@ -77,4 +89,6 @@ export interface UpdateUserInput {
   dateOfBirth: Date;
   gender: 'Male' | 'Female' | 'Other' | '';
   introduction: Introduction;
+  cloudinaryUrls: string[];
+  publicIds: string[];
 }
