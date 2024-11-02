@@ -30,8 +30,8 @@ export const createUser = async (request: Request, response: Response) => {
 // login
 export const login = async (request: Request, response: Response) => {
   try {
-    const { username, password } = request.body;
-    const result = await userService.login(username, password);
+    const { email, password } = request.body;
+    const result = await userService.login(email, password);
     return response.status(200).json(result);
   } catch (error) {
     return response.status(404).json({

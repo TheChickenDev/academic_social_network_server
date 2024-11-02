@@ -39,7 +39,7 @@ const authUserMiddleware = (req: Request, res: Response, next: NextFunction): Re
     });
   }
   if (token && typeof token === 'string') {
-    const username = req.body.username;
+    const email = req.body.email;
     token = token.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN as string, (err: Error, user: TokenPayload | undefined) => {
       if (err) {
@@ -47,7 +47,7 @@ const authUserMiddleware = (req: Request, res: Response, next: NextFunction): Re
           message: 'THE AUTHORIZATION'
         });
       }
-      if (user?.isAdmin || user?.username === username) {
+      if (user?.isAdmin || user?.email === email) {
         next();
       } else {
         return res.status(401).json({

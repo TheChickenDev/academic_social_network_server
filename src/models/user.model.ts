@@ -47,14 +47,6 @@ const addressSchema: Schema<Address> = new Schema(
 
 const contactSchema: Schema<Contact> = new Schema(
   {
-    email: {
-      type: String,
-      required: false,
-      match: [
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-        'Invalid email!'
-      ]
-    },
     phone: {
       type: String,
       required: false,
@@ -82,7 +74,7 @@ const introductionSchema: Schema<Introduction> = new Schema(
 
 const followersSchema: Schema<Follower> = new Schema(
   {
-    followerUsername: { type: String },
+    followerEmail: { type: String },
     followDate: { type: Date },
     followerName: { type: String },
     followerAvatar: { type: ImageSchema }
@@ -95,13 +87,16 @@ const followersSchema: Schema<Follower> = new Schema(
 const userSchema: Schema<User> = new mongoose.Schema(
   {
     googleId: { type: String, required: false, default: null },
-    username: {
+    email: {
       type: String,
-      required: [true, 'Username is required!'],
+      required: [true, 'Email is required!'],
       unique: true,
-      minlength: [6, 'Username must be at least 6 characters long!'],
-      maxlength: [150, 'Username cannot exceed 150 characters!'],
-      match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain alphanumeric characters and underscores!']
+      minlength: [6, 'Email must be at least 6 characters long!'],
+      maxlength: [150, 'Email cannot exceed 150 characters!'],
+      match: [
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        'Invalid email!'
+      ]
     },
     password: {
       type: String,

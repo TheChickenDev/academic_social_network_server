@@ -17,7 +17,7 @@ export interface Group extends Document {
   description: string;
   avatarImg: ImageData;
   backgroundImg: ImageData;
-  ownerUsername: string;
+  ownerEmail: string;
   createdAt: Date;
   updatedAt: Date;
 }

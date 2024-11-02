@@ -32,7 +32,6 @@ export interface Address extends Document {
 
 // contact
 export interface Contact extends Document {
-  email: string;
   phone: string;
   links: string[];
   isPrivate: boolean;
@@ -48,7 +47,7 @@ export interface Introduction extends Document {
 
 // follower
 export interface Follower extends Document {
-  followerUsername: string;
+  followerEmail: string;
   followDate: Date;
   followerName: string;
   followerAvatar: ImageData;
@@ -58,7 +57,7 @@ export interface Follower extends Document {
 export interface User extends Document {
   _id: ObjectId;
   googleId: string;
-  username: string;
+  email: string;
   password: string;
   fullName: string;
   dateOfBirth: Date;
@@ -78,13 +77,13 @@ export interface User extends Document {
 
 // user input
 export interface CreateUserInput {
-  username: string;
+  email: string;
   password: string;
   confirmPassword: string;
 }
 
 export interface UpdateUserInput {
-  username: string;
+  email: string;
   fullName: string;
   dateOfBirth: Date;
   gender: 'Male' | 'Female' | 'Other' | '';
