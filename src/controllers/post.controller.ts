@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import postService from '../services/post.service';
-import { v2 as cloudinary } from 'cloudinary';
 
 // create post
 export const createPost = async (request: Request, response: Response) => {
@@ -31,6 +30,32 @@ export const getPostById = async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
     const result = await postService.getPostById(id);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(404).json({
+      message: error.message
+    });
+  }
+};
+
+// like post
+export const likePost = async (request: Request, response: Response) => {
+  try {
+    const { id } = request.params;
+    const result = await postService.likePost(id, request.body);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(404).json({
+      message: error.message
+    });
+  }
+};
+
+// like post
+export const dislikePost = async (request: Request, response: Response) => {
+  try {
+    const { id } = request.params;
+    const result = await postService.dislikePost(id, request.body);
     return response.status(200).json(result);
   } catch (error) {
     return response.status(404).json({

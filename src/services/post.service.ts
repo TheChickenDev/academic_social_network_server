@@ -1,4 +1,4 @@
-import { Post, PostQuery } from '../interfaces/post.interface';
+import { ActionInfo, Post, PostQuery } from '../interfaces/post.interface';
 import PostModel, { CommentModel } from '../models/post.model';
 
 // create post
@@ -23,9 +23,9 @@ const getPosts = (params: PostQuery) => {
       if (params._id) {
         const post = await PostModel.findById(params._id);
         if (!post) {
-          reject({ message: 'Post not found!' });
+          return reject({ message: 'Post not found!' });
         }
-        resolve({
+        return resolve({
           message: 'Post found!',
           data: post
         });
@@ -47,7 +47,7 @@ const getPostById = (id: string) => {
     try {
       const post = await PostModel.findById(id);
       if (!post) {
-        reject({ message: 'Post not found!' });
+        return reject({ message: 'Post not found!' });
       }
       const comments = await CommentModel.find({ postId: id });
       resolve({
@@ -74,4 +74,66 @@ const getPostById = (id: string) => {
   });
 };
 
-export default { createPost, getPosts, getPostById };
+// like post
+const likePost = (postId: string, actionInfo: ActionInfo) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const post = await PostModel.findById(postId);
+      if (!post) {
+        return reject({ message: 'Post not found!' });
+      }
+      const existLikeIndex = post.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
+      if (existLikeIndex !== -1) {
+        post.likes.splice(existLikeIndex, 1);
+        post.numberOfLikes = post.likes.length;
+        post.save();
+        return resolve({
+          message: 'Post unliked!',
+          data: post
+        });
+      }
+      post.likes.push(actionInfo);
+      post.numberOfLikes = post.likes.length;
+      post.save();
+      resolve({
+        message: 'Post liked!',
+        data: post
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// dislike post
+const dislikePost = (postId: string, actionInfo: ActionInfo) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const post = await PostModel.findById(postId);
+      if (!post) {
+        return reject({ message: 'Post not found!' });
+      }
+      const existLikeIndex = post.dislikes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
+      if (existLikeIndex !== -1) {
+        post.dislikes.splice(existLikeIndex, 1);
+        post.numberOfDislikes = post.dislikes.length;
+        post.save();
+        return resolve({
+          message: 'Post undisliked!',
+          data: post
+        });
+      }
+      post.dislikes.push(actionInfo);
+      post.numberOfDislikes = post.dislikes.length;
+      post.save();
+      resolve({
+        message: 'Post disliked!',
+        data: post
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+export default { createPost, getPosts, getPostById, likePost, dislikePost };

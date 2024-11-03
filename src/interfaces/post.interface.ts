@@ -1,3 +1,8 @@
+export interface ActionInfo {
+  ownerName: string;
+  ownerEmail: string;
+}
+
 export interface Reply {
   _id: string;
   postId: string;
@@ -7,7 +12,9 @@ export interface Reply {
   ownerEmail: string;
   content: object;
   numberOfLikes: number;
+  likes: ActionInfo[];
   numberOfDislikes: number;
+  dislikes: ActionInfo[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,11 +27,13 @@ export interface Comment {
   ownerEmail: string;
   content: object;
   numberOfLikes: number;
+  likes: ActionInfo[];
   numberOfDislikes: number;
+  dislikes: ActionInfo[];
   numberOfRyplies: number;
+  replies: Reply[];
   createdAt: Date;
   updatedAt: Date;
-  replies: Reply[];
 }
 
 export interface Tag {
@@ -43,7 +52,9 @@ export interface Post {
   groupName: string;
   content: object;
   numberOfLikes: number;
+  likes: ActionInfo[];
   numberOfDislikes: number;
+  dislikes: ActionInfo[];
   numberOfComments: number;
   comments: Comment[];
   createdAt: Date;

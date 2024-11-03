@@ -1,5 +1,5 @@
 import { Comment, Reply } from '../interfaces/post.interface';
-import PostModel, { CommentModel, ReplyModel } from '../models/post.model';
+import PostModel, { CommentModel } from '../models/post.model';
 
 // comment
 const comment = (commentData: Comment) => {
@@ -28,12 +28,16 @@ const replyComment = (replyData: Reply) => {
       if (!comment) {
         reject({ message: 'Comment not found!' });
       }
-      const newComment = await ReplyModel.create(replyData);
-      comment.replies.push(newComment);
+      const newReply = {
+        ...replyData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      comment.replies.push(newReply);
       comment.save();
       resolve({
         message: 'Comment successful!',
-        data: newComment
+        data: newReply
       });
     } catch (error) {
       reject(error);
