@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
 import { TokenPayload } from '../interfaces/auth.interface';
+import UserModel from '../models/user.model';
 
 dotenv.config();
 
@@ -39,15 +40,20 @@ const authUserMiddleware = (req: Request, res: Response, next: NextFunction): Re
     });
   }
   if (token && typeof token === 'string') {
-    const email = req.body.email;
     token = token.split(' ')[1];
-    jwt.verify(token, process.env.ACCESS_TOKEN as string, (err: Error, user: TokenPayload | undefined) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN as string, async (err: Error, user: TokenPayload | undefined) => {
       if (err) {
         return res.status(401).json({
           message: 'THE AUTHORIZATION'
         });
       }
-      if (user?.isAdmin || user?.email === email) {
+      const existUser = await UserModel.findOne({ email: user?.email }, 'email');
+      if (!existUser) {
+        return res.status(401).json({
+          message: 'THE AUTHORIZATION'
+        });
+      }
+      if (user?.isAdmin || user?.email === existUser?.email) {
         next();
       } else {
         return res.status(401).json({

@@ -7,7 +7,7 @@ export const commentSchema: Schema<Comment> = new Schema(
     ownerName: { type: String, required: true },
     ownerAvatar: { type: String, required: true },
     ownerEmail: { type: String, required: true },
-    content: { type: String, required: true },
+    content: { type: Schema.Types.Mixed, required: true },
     numberOfLikes: { type: Number, required: true, default: 0 },
     likes: [
       new Schema<ActionInfo>(
@@ -41,7 +41,7 @@ export const commentSchema: Schema<Comment> = new Schema(
           ownerName: { type: String, required: true },
           ownerAvatar: { type: String, required: true },
           ownerEmail: { type: String, required: true },
-          content: { type: String, required: true },
+          content: { type: Schema.Types.Mixed, required: true },
           numberOfLikes: { type: Number, required: true, default: 0 },
           likes: [
             new Schema<ActionInfo>(
@@ -85,7 +85,7 @@ export const tagSchema: Schema<Tag> = new Schema(
 const postSchema: Schema<Post> = new Schema(
   {
     title: { type: String, required: true },
-    tags: { type: [tagSchema], required: true },
+    tags: { type: [tagSchema], required: false, default: [] },
     ownerName: { type: String, required: true },
     ownerAvatar: { type: String, required: true },
     ownerEmail: { type: String, required: true },

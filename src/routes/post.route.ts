@@ -1,11 +1,12 @@
 import express from 'express';
 import { createPost, dislikePost, getPostById, getPosts, likePost } from '../controllers/post.controller';
+import { authUserMiddleware } from '../middlewares/auth';
 const router = express.Router();
 
-router.post('/', createPost);
+router.post('/', authUserMiddleware, createPost);
 router.get('/', getPosts);
-router.get('/:id', getPostById);
-router.post('/:id/like', likePost);
-router.post('/:id/dislike', dislikePost);
+router.get('/:id', authUserMiddleware, getPostById);
+router.post('/:id/like', authUserMiddleware, likePost);
+router.post('/:id/dislike', authUserMiddleware, dislikePost);
 
 export default router;

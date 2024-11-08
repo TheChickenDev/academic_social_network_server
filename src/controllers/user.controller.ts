@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import userService from '../services/user.service';
 import { isValidInputPassword } from '../utils/user.utils';
 import { v2 as cloudinary } from 'cloudinary';
+import { refreshTokenService } from '../services/jwt';
 
 // create user
 export const createUser = async (request: Request, response: Response) => {
@@ -93,19 +94,21 @@ export const followUser = async (request: Request, response: Response) => {
   }
 };
 
-// create group
-export const createGroup = async (request: Request, response: Response) => {
+// refresh token
+export const refreshToken = async (request: Request, response: Response) => {
   try {
-    const result = await userService.createGroup(request.body);
-    return response.status(201).json(result);
-  } catch (error) {
-    if (request.body.publicIds && request.body.publicIds.length > 0) {
-      for (const publicId of request.body.publicIds) {
-        await cloudinary.uploader.destroy(publicId);
-      }
+    const token = (request.headers.refresh_token as string)?.split(' ')[1];
+    if (!token) {
+      return response.status(200).json({
+        status: 'ERR',
+        message: 'The token is required'
+      });
     }
+    const res = await refreshTokenService(token);
+    return response.status(200).json(res);
+  } catch (error) {
     return response.status(404).json({
-      message: error.message
+      message: error
     });
   }
 };

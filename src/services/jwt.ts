@@ -2,6 +2,7 @@ import { TokenPayload } from '../interfaces/auth.interface';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { User } from '../interfaces/user.interface';
+import UserModel from '../models/user.model';
 dotenv.config();
 
 const generateAccessToken = async (payload: TokenPayload) => {
@@ -26,30 +27,31 @@ const generateRefreshToken = async (payload: TokenPayload) => {
   return refresh_token;
 };
 
-const refreshTokenService = (token: string) => {
+export const refreshTokenService = (token: string) => {
   return new Promise((resolve, reject) => {
     try {
-      jwt.verify(token, process.env.REFRESH_TOKEN, async (err, user: User) => {
+      jwt.verify(token, process.env.REFRESH_TOKEN, async (err, user: TokenPayload) => {
         if (err) {
           resolve({
             status: 'ERR',
             message: 'THE AUTHENTICATION'
           });
         }
-        // const access_token = await generateAccessToken({
-        //   id: user?.id,
-        //   isAdmin: user?.isAdmin,
-        //   email: user?.email,
-        //   avatar: user?.avatar,
-        //   name: user?.name,
-        //   phone: user?.phone,
-        //   address: user?.address
-        // });
-        // resolve({
-        //   status: 'OK',
-        //   message: 'REFRESH TOKEN SUCCESS',
-        //   data: access_token
-        // });
+        const access_token = await generateAccessToken({
+          email: user?.email,
+          isAdmin: user?.isAdmin,
+          fullName: user?.fullName,
+          avatar: user?.avatar
+        });
+        UserModel.findOne({ email: user?.email }).then((res: User) => {
+          res.accessToken = access_token;
+          res.save();
+        });
+        resolve({
+          status: 'OK',
+          message: 'REFRESH TOKEN SUCCESSFUL',
+          data: access_token
+        });
       });
     } catch (error) {
       reject(error);
@@ -57,7 +59,7 @@ const refreshTokenService = (token: string) => {
   });
 };
 
-const generateResetPasswordToken = async (email: string) => {
+export const generateResetPasswordToken = async (email: string) => {
   const currentDate = new Date();
   let randomNumber = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
   const reset_token = jwt.sign(
@@ -74,7 +76,5 @@ const generateResetPasswordToken = async (email: string) => {
 
 export default {
   generateAccessToken,
-  generateRefreshToken,
-  refreshTokenService,
-  generateResetPasswordToken
+  generateRefreshToken
 };

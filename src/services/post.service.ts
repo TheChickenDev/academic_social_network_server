@@ -17,11 +17,11 @@ const createPost = (newPostData: Post) => {
 };
 
 // get posts
-const getPosts = (params: PostQuery) => {
+const getPosts = (query: PostQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
-      if (params._id) {
-        const post = await PostModel.findById(params._id);
+      if (query.ownerEmail) {
+        const post = await PostModel.find({ ownerEmail: query.ownerEmail });
         if (!post) {
           return reject({ message: 'Post not found!' });
         }
@@ -30,7 +30,8 @@ const getPosts = (params: PostQuery) => {
           data: post
         });
       }
-      const posts = await PostModel.find();
+      const skip = (query.page - 1) * query.limit;
+      const posts = await PostModel.find().sort({ createdAt: -1 }).skip(skip).limit(query.limit);
       resolve({
         message: 'Posts found!',
         data: posts
@@ -49,7 +50,7 @@ const getPostById = (id: string) => {
       if (!post) {
         return reject({ message: 'Post not found!' });
       }
-      const comments = await CommentModel.find({ postId: id });
+      const comments = await CommentModel.find({ postId: id }).sort({ createdAt: -1 });
       resolve({
         message: 'Post found!',
         data: {
@@ -62,7 +63,9 @@ const getPostById = (id: string) => {
           ownerEmail: post.ownerEmail,
           numberOfComments: post.numberOfComments,
           numberOfLikes: post.numberOfLikes,
+          likes: post.likes,
           numberOfDislikes: post.numberOfDislikes,
+          dislikes: post.dislikes,
           createdAt: post.createdAt,
           updatedAt: post.updatedAt,
           comments
@@ -113,9 +116,9 @@ const dislikePost = (postId: string, actionInfo: ActionInfo) => {
       if (!post) {
         return reject({ message: 'Post not found!' });
       }
-      const existLikeIndex = post.dislikes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
-      if (existLikeIndex !== -1) {
-        post.dislikes.splice(existLikeIndex, 1);
+      const existDislikeIndex = post.dislikes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
+      if (existDislikeIndex !== -1) {
+        post.dislikes.splice(existDislikeIndex, 1);
         post.numberOfDislikes = post.dislikes.length;
         post.save();
         return resolve({

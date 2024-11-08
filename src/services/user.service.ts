@@ -2,7 +2,6 @@ import UserModel, { FollowerModel } from '../models/user.model';
 import { User, CreateUserInput, UpdateUserInput } from '../interfaces/user.interface';
 import bcrypt from 'bcrypt';
 import jwtService from './jwt';
-import GroupModel, { GroupMemberModel } from '../models/group.model';
 
 const createUser = (newUserData: CreateUserInput) => {
   return new Promise(async (resolve, reject) => {
@@ -230,49 +229,4 @@ const followUser = (data: { email: string; followedEmail: string }) => {
   });
 };
 
-const createGroup = (data: {
-  email: string;
-  name: string;
-  description: string;
-  cloudinaryUrls: string[];
-  publicIds: string[];
-}) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const user: User = await UserModel.findOne({ email: data.email });
-      if (!user) {
-        reject({
-          message: 'User not found!'
-        });
-      }
-      let newGroupData: {
-        name: string;
-        description: string;
-        avatarImg?: object;
-        backgroundImg?: object;
-        ownerEmail: string;
-      } = {
-        name: data.name,
-        description: data.description,
-        ownerEmail: user.email
-      };
-      if (data.cloudinaryUrls && data.cloudinaryUrls[0]) {
-        newGroupData = { ...newGroupData, avatarImg: { url: data.cloudinaryUrls[0], publicId: data.publicIds[0] } };
-      }
-      if (data.cloudinaryUrls && data.cloudinaryUrls[1]) {
-        newGroupData = { ...newGroupData, backgroundImg: { url: data.cloudinaryUrls[1], publicId: data.publicIds[1] } };
-      }
-      const newGroup = await GroupModel.create(newGroupData);
-      user.groups.push(new GroupMemberModel({ groupId: newGroup._id, groupName: newGroup.name, role: 'Admin' }));
-      await user.save();
-      resolve({
-        message: 'Create group successful!',
-        data: newGroup
-      });
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-export default { createUser, login, loginWithGoogle, updateUser, blockUser, followUser, createGroup };
+export default { createUser, login, loginWithGoogle, updateUser, blockUser, followUser };

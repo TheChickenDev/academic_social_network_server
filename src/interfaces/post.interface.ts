@@ -62,7 +62,6 @@ export interface Post {
 }
 
 export interface PostQuery {
-  _id: string;
   page: number;
   limit: number;
   ownerEmail: string;
