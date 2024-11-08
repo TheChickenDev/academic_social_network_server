@@ -21,13 +21,13 @@ const getPosts = (query: PostQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
       if (query.ownerEmail) {
-        const post = await PostModel.find({ ownerEmail: query.ownerEmail });
-        if (!post) {
-          return reject({ message: 'Post not found!' });
+        const posts = await PostModel.find({ ownerEmail: query.ownerEmail });
+        if (!posts) {
+          return reject({ message: 'Posts not found!' });
         }
         return resolve({
           message: 'Post found!',
-          data: post
+          data: posts
         });
       }
       const skip = (query.page - 1) * query.limit;
@@ -35,6 +35,43 @@ const getPosts = (query: PostQuery) => {
       resolve({
         message: 'Posts found!',
         data: posts
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// update post
+const updatePost = (newData: Post) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { _id, ...data } = newData;
+      const post = await PostModel.findByIdAndUpdate(_id, data, { new: true });
+      if (!post) {
+        return reject({ message: 'Post not found!' });
+      }
+      resolve({
+        message: 'Post updated!',
+        data: post
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// update post
+const deletePost = (id: string) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const post = await PostModel.findByIdAndDelete(id);
+      if (!post) {
+        return reject({ message: 'Post not found!' });
+      }
+      resolve({
+        message: 'Post deleted!',
+        data: post
       });
     } catch (error) {
       reject(error);
@@ -50,26 +87,9 @@ const getPostById = (id: string) => {
       if (!post) {
         return reject({ message: 'Post not found!' });
       }
-      const comments = await CommentModel.find({ postId: id }).sort({ createdAt: -1 });
       resolve({
         message: 'Post found!',
-        data: {
-          _id: post._id,
-          title: post.title,
-          content: post.content,
-          tags: post.tags,
-          ownerName: post.ownerName,
-          ownerAvatar: post.ownerAvatar,
-          ownerEmail: post.ownerEmail,
-          numberOfComments: post.numberOfComments,
-          numberOfLikes: post.numberOfLikes,
-          likes: post.likes,
-          numberOfDislikes: post.numberOfDislikes,
-          dislikes: post.dislikes,
-          createdAt: post.createdAt,
-          updatedAt: post.updatedAt,
-          comments
-        }
+        data: post
       });
     } catch (error) {
       reject(error);
@@ -139,4 +159,4 @@ const dislikePost = (postId: string, actionInfo: ActionInfo) => {
   });
 };
 
-export default { createPost, getPosts, getPostById, likePost, dislikePost };
+export default { createPost, getPosts, getPostById, likePost, dislikePost, updatePost, deletePost };

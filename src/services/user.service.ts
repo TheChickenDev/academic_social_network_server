@@ -49,13 +49,13 @@ const login = (email: string, password: string) => {
           email: user.email,
           isAdmin: user.isAdmin,
           fullName: user.fullName,
-          avatar: user.avatarImg.url
+          avatar: user.avatarImg?.url
         });
         const refresh_token = await jwtService.generateRefreshToken({
           email: user.email,
           isAdmin: user.isAdmin,
           fullName: user.fullName,
-          avatar: user.avatarImg.url
+          avatar: user.avatarImg?.url
         });
         await UserModel.findByIdAndUpdate(user._id, { accessToken: access_token, refreshToken: refresh_token });
         resolve({

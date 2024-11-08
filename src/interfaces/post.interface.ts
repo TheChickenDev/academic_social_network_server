@@ -66,3 +66,9 @@ export interface PostQuery {
   limit: number;
   ownerEmail: string;
 }
+
+export interface CommentQuery {
+  postId: string;
+  page: number;
+  limit: number;
+}

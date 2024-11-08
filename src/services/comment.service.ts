@@ -1,4 +1,4 @@
-import { ActionInfo, Comment, Reply } from '../interfaces/post.interface';
+import { ActionInfo, Comment, CommentQuery, Reply } from '../interfaces/post.interface';
 import PostModel, { CommentModel } from '../models/post.model';
 import { Document } from 'mongoose';
 
@@ -182,4 +182,26 @@ const dislikeComment = (commentId: string, parentId: string, actionInfo: ActionI
   });
 };
 
-export default { comment, replyComment, likeComment, dislikeComment };
+// get comments by post id
+const getCommentsByPostId = (query: CommentQuery) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const skip = (query.page - 1) * query.limit;
+      const comments = await CommentModel.find({ postId: query.postId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(query.limit);
+      if (!comments) {
+        return reject({ message: 'Comments not found!' });
+      }
+      resolve({
+        message: 'Comments found!',
+        data: comments
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+export default { comment, replyComment, likeComment, dislikeComment, getCommentsByPostId };
