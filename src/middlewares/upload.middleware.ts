@@ -24,8 +24,8 @@ export const uploadUserImagesToCloudinary = async (req: Request, res: Response, 
     if (!files || files.length === 0) {
       return next();
     }
-    const cloudinaryUrls: string[] = [];
-    const publicIds: string[] = [];
+    let cloudinaryUrl: string = '';
+    let publicId: string = '';
     for (const file of files) {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -41,14 +41,12 @@ export const uploadUserImagesToCloudinary = async (req: Request, res: Response, 
             console.error('Cloudinary upload error: Result is undefined');
             return next(new Error('Cloudinary upload result is undefined'));
           }
-          cloudinaryUrls.push(result.secure_url);
-          publicIds.push(result.public_id);
+          cloudinaryUrl = result.secure_url;
+          publicId = result.public_id;
 
-          if (cloudinaryUrls.length === files.length) {
-            req.body.cloudinaryUrls = cloudinaryUrls;
-            req.body.publicIds = publicIds;
-            next();
-          }
+          req.body.cloudinaryUrl = cloudinaryUrl;
+          req.body.publicId = publicId;
+          next();
         }
       );
       uploadStream.end(file.buffer);

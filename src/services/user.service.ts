@@ -1,8 +1,10 @@
 import UserModel, { FollowerModel } from '../models/user.model';
-import { User, CreateUserInput, UpdateUserInput } from '../interfaces/user.interface';
+import { User, CreateUserInput, UpdateUserInput, UserQuery } from '../interfaces/user.interface';
 import bcrypt from 'bcrypt';
 import jwtService from './jwt';
+import PostModel from '../models/post.model';
 
+// register
 const createUser = (newUserData: CreateUserInput) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -30,6 +32,7 @@ const createUser = (newUserData: CreateUserInput) => {
   });
 };
 
+// login
 const login = (email: string, password: string) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -72,6 +75,7 @@ const login = (email: string, password: string) => {
   });
 };
 
+// login with google
 const loginWithGoogle = (data: { email: string; name: string; googleId: string; avatar: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -122,15 +126,18 @@ const loginWithGoogle = (data: { email: string; name: string; googleId: string; 
   });
 };
 
+// update user
 const updateUser = (data: UpdateUserInput) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const { email, introduction } = data;
+      let { email, introduction } = data;
+
+      introduction = JSON.parse(introduction as unknown as string);
 
       if (introduction?.contact?.phone) {
         const user: User = await UserModel.findOne({ 'introduction.contact.phone': introduction.contact.phone });
         if (user && user.email !== email) {
-          reject({
+          return reject({
             message: 'Phone number already exists!'
           });
         }
@@ -141,29 +148,27 @@ const updateUser = (data: UpdateUserInput) => {
         dateOfBirth: Date;
         gender: string;
         introduction?: object;
+        description?: string;
         avatarImg?: object;
-        backgroundImg?: object;
       } = {
         fullName: data.fullName,
         dateOfBirth: data.dateOfBirth,
-        gender: data.gender
+        gender: data.gender,
+        description: data.description
       };
 
       if (introduction?.contact || introduction?.address || introduction?.educations || introduction?.jobs) {
         newData = { ...newData, introduction };
       }
 
-      if (data.cloudinaryUrls && data.cloudinaryUrls[0]) {
-        newData = { ...newData, avatarImg: { url: data.cloudinaryUrls[0], publicId: data.publicIds[0] } };
-      }
-      if (data.cloudinaryUrls && data.cloudinaryUrls[1]) {
-        newData = { ...newData, backgroundImg: { url: data.cloudinaryUrls[1], publicId: data.publicIds[1] } };
+      if (data.cloudinaryUrl) {
+        newData = { ...newData, avatarImg: { url: data.cloudinaryUrl, publicId: data.publicId } };
       }
 
       const user: User = await UserModel.findOneAndUpdate({ email }, newData, { new: true });
 
       if (!user) {
-        reject({
+        return reject({
           message: 'User not found!'
         });
       }
@@ -171,6 +176,45 @@ const updateUser = (data: UpdateUserInput) => {
       resolve({
         message: 'Update user successful!',
         data: user
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// get user
+const getUser = ({ email, _id }: UserQuery) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user: User = await UserModel.findOne({ email });
+      if (!user) {
+        return reject({
+          message: 'User not found!'
+        });
+      }
+      const posts = await PostModel.find({ ownerEmail: email });
+      const saved = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const friends = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const activities = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      resolve({
+        message: 'Get user successful!',
+        data: {
+          _id: user._id,
+          email: user.email,
+          fullName: user.fullName,
+          dateOfBirth: user.dateOfBirth,
+          gender: user.gender,
+          description: user.description,
+          introduction: user.introduction,
+          points: user.points,
+          rank: user.rank,
+          avatarImg: user.avatarImg?.url,
+          posts,
+          saved,
+          friends,
+          activities
+        }
       });
     } catch (error) {
       reject(error);
@@ -199,34 +243,4 @@ const blockUser = (data: { email: string }) => {
   });
 };
 
-const followUser = (data: { email: string; followedEmail: string }) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const followedUser: User = await UserModel.findOne({ email: data.followedEmail });
-      if (!followedUser) {
-        reject({
-          message: 'Followed user not found!'
-        });
-      }
-      const user: User = await UserModel.findOne({ email: data.email });
-      const newFollower = new FollowerModel({
-        followerEmail: user.email,
-        followDate: new Date(),
-        followerName: user.fullName,
-        followerAvatar: user.avatarImg
-      });
-
-      followedUser.followers.push(newFollower);
-
-      await followedUser.save();
-      resolve({
-        message: 'Block user successful!',
-        data: followedUser
-      });
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-export default { createUser, login, loginWithGoogle, updateUser, blockUser, followUser };
+export default { createUser, login, loginWithGoogle, updateUser, getUser, blockUser };

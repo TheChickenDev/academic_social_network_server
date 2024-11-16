@@ -72,6 +72,12 @@ const likeComment = (commentId: string, parentId: string, actionInfo: ActionInfo
         let newReply = null;
         comment.replies.forEach((reply) => {
           if (reply._id.toString() === commentId) {
+            const existDislikeIndex = reply.dislikes.findIndex(
+              (dislike) => dislike.ownerEmail === actionInfo.ownerEmail
+            );
+            if (existDislikeIndex !== -1) {
+              return reject({ message: 'You have already disliked this comment!' });
+            }
             const existLikeIndex = reply.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
             if (existLikeIndex !== -1) {
               reply.likes.splice(existLikeIndex, 1);
@@ -93,6 +99,10 @@ const likeComment = (commentId: string, parentId: string, actionInfo: ActionInfo
 
         if (!comment) {
           return reject({ message: 'Comment not found!' });
+        }
+        const existDislikeIndex = comment.dislikes.findIndex((dislike) => dislike.ownerEmail === actionInfo.ownerEmail);
+        if (existDislikeIndex !== -1) {
+          return reject({ message: 'You have already disliked this comment!' });
         }
         const existLikeIndex = comment.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
         if (existLikeIndex !== -1) {
@@ -136,7 +146,13 @@ const dislikeComment = (commentId: string, parentId: string, actionInfo: ActionI
         let newReply = null;
         comment.replies.forEach((reply) => {
           if (reply._id.toString() === commentId) {
-            const existDislikeIndex = reply.dislikes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
+            const existLikeIndex = reply.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
+            if (existLikeIndex !== -1) {
+              return reject({ message: 'You have already liked this comment!' });
+            }
+            const existDislikeIndex = reply.dislikes.findIndex(
+              (dislike) => dislike.ownerEmail === actionInfo.ownerEmail
+            );
             if (existDislikeIndex !== -1) {
               reply.dislikes.splice(existDislikeIndex, 1);
               reply.numberOfDislikes = reply.dislikes.length;
@@ -158,7 +174,11 @@ const dislikeComment = (commentId: string, parentId: string, actionInfo: ActionI
         if (!comment) {
           return reject({ message: 'Comment not found!' });
         }
-        const existDislikeIndex = comment.dislikes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
+        const existLikeIndex = comment.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
+        if (existLikeIndex !== -1) {
+          return reject({ message: 'You have already liked this comment!' });
+        }
+        const existDislikeIndex = comment.dislikes.findIndex((dislike) => dislike.ownerEmail === actionInfo.ownerEmail);
         if (existDislikeIndex !== -1) {
           comment.dislikes.splice(existDislikeIndex, 1);
           comment.numberOfDislikes = comment.dislikes.length;

@@ -1,7 +1,6 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import { Job, Education, Address, Contact, Introduction, User, Follower } from '../interfaces/user.interface';
+import { Job, Education, Contact, Introduction, User, Follower } from '../interfaces/user.interface';
 import { ImageSchema } from './utils.model';
-import { groupMemberSchema } from './group.model';
 
 // job
 
@@ -10,7 +9,8 @@ const jobSchema: Schema<Job> = new Schema(
     profession: { type: String },
     company: { type: String },
     fromDate: { type: Date },
-    toDate: { type: mongoose.Schema.Types.Mixed },
+    toDate: { type: Date },
+    untilNow: { type: Boolean },
     description: { type: String },
     isPrivate: { type: Boolean, default: false }
   },
@@ -23,21 +23,8 @@ const educationSchema: Schema<Education> = new Schema(
   {
     schoolName: { type: String },
     fromDate: { type: Date },
-    toDate: { type: mongoose.Schema.Types.Mixed },
-    isPrivate: { type: Boolean, default: false }
-  },
-  { _id: false }
-);
-
-// address
-
-const addressSchema: Schema<Address> = new Schema(
-  {
-    country: { type: String },
-    province: { type: String },
-    district: { type: String },
-    street: { type: String },
-    zipCode: { type: String },
+    toDate: { type: Date },
+    untilNow: { type: Boolean },
     isPrivate: { type: Boolean, default: false }
   },
   { _id: false }
@@ -64,7 +51,7 @@ const introductionSchema: Schema<Introduction> = new Schema(
   {
     jobs: { type: [jobSchema] },
     educations: { type: [educationSchema] },
-    address: { type: addressSchema },
+    address: { type: String },
     contact: { type: contactSchema }
   },
   { _id: false }
@@ -120,10 +107,10 @@ const userSchema: Schema<User> = new mongoose.Schema(
     },
     gender: { type: String, enum: ['Male', 'Female', 'Other', ''], default: '' },
     introduction: { type: introductionSchema, required: false, default: null },
-    followers: { type: [followersSchema], required: false, default: [] },
-    groups: { type: [groupMemberSchema], required: false, default: [] },
+    description: { type: String, required: false, default: '' },
+    points: { type: Number, required: false, default: 0 },
+    rank: { type: String, required: false, default: '' },
     avatarImg: { type: ImageSchema, required: false, default: null },
-    backgroundImg: { type: ImageSchema, required: false, default: null },
     isAdmin: { type: Boolean, required: false, default: false },
     isActive: { type: Boolean, required: false, default: true },
     accessToken: { type: String, required: false, default: null },

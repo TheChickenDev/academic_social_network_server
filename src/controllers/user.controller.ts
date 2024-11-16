@@ -22,7 +22,7 @@ export const createUser = async (request: Request, response: Response) => {
     const result = await userService.createUser(request.body);
     return response.status(201).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -35,7 +35,7 @@ export const login = async (request: Request, response: Response) => {
     const result = await userService.login(email, password);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -47,7 +47,7 @@ export const loginWithGoogle = async (request: Request, response: Response) => {
     const result = await userService.loginWithGoogle(request.body);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -57,14 +57,27 @@ export const loginWithGoogle = async (request: Request, response: Response) => {
 export const updateUser = async (request: Request, response: Response) => {
   try {
     const result = await userService.updateUser(request.body);
-    return response.status(201).json(result);
+    return response.status(200).json(result);
   } catch (error) {
-    if (request.body.publicIds && request.body.publicIds.length > 0) {
-      for (const publicId of request.body.publicIds) {
-        await cloudinary.uploader.destroy(publicId);
-      }
+    if (request.body.publicId) {
+      await cloudinary.uploader.destroy(request.body.publicId);
     }
-    return response.status(404).json({
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// get user
+export const getUser = async (request: Request, response: Response) => {
+  try {
+    const { email } = request.query;
+    const result = await userService.getUser({
+      email: email as string
+    });
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -74,21 +87,9 @@ export const updateUser = async (request: Request, response: Response) => {
 export const blockUser = async (request: Request, response: Response) => {
   try {
     const result = await userService.blockUser(request.body);
-    return response.status(201).json(result);
+    return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
-      message: error.message
-    });
-  }
-};
-
-// follow user
-export const followUser = async (request: Request, response: Response) => {
-  try {
-    const result = await userService.followUser(request.body);
-    return response.status(201).json(result);
-  } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -107,7 +108,7 @@ export const refreshToken = async (request: Request, response: Response) => {
     const res = await refreshTokenService(token);
     return response.status(200).json(res);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error
     });
   }

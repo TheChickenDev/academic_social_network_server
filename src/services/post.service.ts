@@ -105,6 +105,10 @@ const likePost = (postId: string, actionInfo: ActionInfo) => {
       if (!post) {
         return reject({ message: 'Post not found!' });
       }
+      const existDislikeIndex = post.dislikes.findIndex((dislike) => dislike.ownerEmail === actionInfo.ownerEmail);
+      if (existDislikeIndex !== -1) {
+        return reject({ message: 'You have already disliked this post!' });
+      }
       const existLikeIndex = post.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
       if (existLikeIndex !== -1) {
         post.likes.splice(existLikeIndex, 1);
@@ -135,6 +139,10 @@ const dislikePost = (postId: string, actionInfo: ActionInfo) => {
       const post = await PostModel.findById(postId);
       if (!post) {
         return reject({ message: 'Post not found!' });
+      }
+      const existLikeIndex = post.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
+      if (existLikeIndex !== -1) {
+        return reject({ message: 'You have already liked this post!' });
       }
       const existDislikeIndex = post.dislikes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
       if (existDislikeIndex !== -1) {

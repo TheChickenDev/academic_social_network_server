@@ -36,7 +36,6 @@ const createGroup = (data: {
         newGroupData = { ...newGroupData, backgroundImg: { url: data.cloudinaryUrls[1], publicId: data.publicIds[1] } };
       }
       const newGroup = await GroupModel.create(newGroupData);
-      user.groups.push(new GroupMemberModel({ groupId: newGroup._id, groupName: newGroup.name, role: 'Admin' }));
       await user.save();
       resolve({
         message: 'Create group successful!',

@@ -1,13 +1,13 @@
 import { Document, ObjectId } from 'mongoose';
 import { ImageData } from './utils.interface';
-import { GroupMember } from './group.interface';
 
 // job
 export interface Job extends Document {
   profession: string;
   company: string;
   fromDate: Date;
-  toDate: Date | 'until now';
+  toDate: Date;
+  untilNow: boolean;
   description: string;
   isPrivate: boolean;
 }
@@ -16,17 +16,8 @@ export interface Job extends Document {
 export interface Education extends Document {
   schoolName: string;
   fromDate: Date;
-  toDate: Date | 'until now';
-  isPrivate: boolean;
-}
-
-// address
-export interface Address extends Document {
-  country: string;
-  province: string;
-  district: string;
-  street: string;
-  zipCode: string;
+  toDate: Date;
+  untilNow: boolean;
   isPrivate: boolean;
 }
 
@@ -41,7 +32,7 @@ export interface Contact extends Document {
 export interface Introduction extends Document {
   jobs: Job[];
   educations: Education[];
-  address: Address;
+  address: string;
   contact: Contact;
 }
 
@@ -63,10 +54,10 @@ export interface User extends Document {
   dateOfBirth: Date;
   gender: 'Male' | 'Female' | 'Other' | '';
   introduction: Introduction;
-  followers: Follower[];
-  groups: GroupMember[];
+  description: string;
+  points: number;
+  rank: string;
   avatarImg: ImageData;
-  backgroundImg: ImageData;
   isAdmin: boolean;
   isActive: boolean;
   accessToken: string;
@@ -88,6 +79,12 @@ export interface UpdateUserInput {
   dateOfBirth: Date;
   gender: 'Male' | 'Female' | 'Other' | '';
   introduction: Introduction;
-  cloudinaryUrls: string[];
-  publicIds: string[];
+  description: string;
+  cloudinaryUrl: string;
+  publicId: string;
+}
+
+export interface UserQuery {
+  email: string;
+  _id?: string;
 }
