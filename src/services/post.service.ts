@@ -1,5 +1,6 @@
 import { ActionInfo, Post, PostQuery } from '../interfaces/post.interface';
-import PostModel, { CommentModel } from '../models/post.model';
+import UserModel from '../models/user.model';
+import PostModel from '../models/post.model';
 
 // create post
 const createPost = (newPostData: Post) => {
@@ -20,21 +21,43 @@ const createPost = (newPostData: Post) => {
 const getPosts = (query: PostQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
-      if (query.ownerEmail) {
-        const posts = await PostModel.find({ ownerEmail: query.ownerEmail });
+      if (query.ownerEmail && !query.getSavedPosts) {
+        const skip = (query.page - 1) * query.limit;
+        const posts = await PostModel.find({ ownerEmail: query.ownerEmail })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(query.limit);
+        if (!posts) {
+          return reject({ message: 'No post found!' });
+        }
+        return resolve({
+          message: 'Posts found!',
+          data: posts
+        });
+      } else if (query.getSavedPosts) {
+        const skip = (query.page - 1) * query.limit;
+        const user = await UserModel.findOne({ email: query.ownerEmail }).select('savedPosts');
+        const posts = await PostModel.find({ _id: { $in: user?.savedPosts } })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(query.limit);
         if (!posts) {
           return reject({ message: 'Posts not found!' });
         }
         return resolve({
-          message: 'Post found!',
+          message: 'Posts found!',
           data: posts
         });
       }
       const skip = (query.page - 1) * query.limit;
       const posts = await PostModel.find().sort({ createdAt: -1 }).skip(skip).limit(query.limit);
+      const user = await UserModel.findOne({ email: query.userEmail }).select('savedPosts');
       resolve({
         message: 'Posts found!',
-        data: posts
+        data: posts.map((post) => ({
+          ...post.toObject(),
+          isSaved: user?.savedPosts?.includes(post._id) ?? false
+        }))
       });
     } catch (error) {
       reject(error);
@@ -70,8 +93,7 @@ const deletePost = (id: string) => {
         return reject({ message: 'Post not found!' });
       }
       resolve({
-        message: 'Post deleted!',
-        data: post
+        message: 'Post deleted!'
       });
     } catch (error) {
       reject(error);
@@ -80,16 +102,20 @@ const deletePost = (id: string) => {
 };
 
 // get post by id
-const getPostById = (id: string) => {
+const getPostById = (id: string, userEmail: string) => {
   return new Promise(async (resolve, reject) => {
     try {
       const post = await PostModel.findById(id);
       if (!post) {
         return reject({ message: 'Post not found!' });
       }
+      const user = await UserModel.findOne({ email: userEmail }).select('savedPosts');
       resolve({
         message: 'Post found!',
-        data: post
+        data: {
+          ...post?.toObject(),
+          isSaved: user?.savedPosts?.includes(post._id) ?? false
+        }
       });
     } catch (error) {
       reject(error);
@@ -167,4 +193,12 @@ const dislikePost = (postId: string, actionInfo: ActionInfo) => {
   });
 };
 
-export default { createPost, getPosts, getPostById, likePost, dislikePost, updatePost, deletePost };
+export default {
+  createPost,
+  getPosts,
+  getPostById,
+  likePost,
+  dislikePost,
+  updatePost,
+  deletePost
+};

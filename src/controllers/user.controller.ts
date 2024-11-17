@@ -113,3 +113,27 @@ export const refreshToken = async (request: Request, response: Response) => {
     });
   }
 };
+
+// save post
+export const savePost = async (request: Request, response: Response) => {
+  try {
+    const result = await userService.savePost(request.body);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// unsave post
+export const unsavePost = async (request: Request, response: Response) => {
+  try {
+    const result = await userService.unsavePost(request.body);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};

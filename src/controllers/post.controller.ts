@@ -1,4 +1,4 @@
-import { Request, RequestHandler, Response } from 'express';
+import { Request, Response } from 'express';
 import postService from '../services/post.service';
 
 // create post
@@ -7,7 +7,7 @@ export const createPost = async (request: Request, response: Response) => {
     const result = await postService.createPost(request.body);
     return response.status(201).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -16,15 +16,17 @@ export const createPost = async (request: Request, response: Response) => {
 // get posts
 export const getPosts = async (request: Request, response: Response) => {
   try {
-    const { page, limit, ownerEmail } = request.query;
+    const { page, limit, ownerEmail, userEmail, getSavedPosts } = request.query;
     const result = await postService.getPosts({
       page: parseInt(page as string, 10) ?? 1,
       limit: parseInt(limit as string, 10) ?? 10,
-      ownerEmail: ownerEmail as string
+      userEmail: userEmail as string,
+      ownerEmail: ownerEmail as string,
+      getSavedPosts: getSavedPosts === 'true'
     });
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -36,7 +38,7 @@ export const updatePost = async (request: Request, response: Response) => {
     const result = await postService.updatePost(request.body);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -48,7 +50,7 @@ export const deletePost = async (request: Request, response: Response) => {
     const result = await postService.deletePost(request.params.id);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -58,10 +60,11 @@ export const deletePost = async (request: Request, response: Response) => {
 export const getPostById = async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
-    const result = await postService.getPostById(id);
+    const { userEmail } = request.query;
+    const result = await postService.getPostById(id, userEmail as string);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -74,7 +77,7 @@ export const likePost = async (request: Request, response: Response) => {
     const result = await postService.likePost(id, request.body);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -87,7 +90,7 @@ export const dislikePost = async (request: Request, response: Response) => {
     const result = await postService.dislikePost(id, request.body);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }

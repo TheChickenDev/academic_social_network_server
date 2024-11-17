@@ -110,6 +110,7 @@ const userSchema: Schema<User> = new mongoose.Schema(
     description: { type: String, required: false, default: '' },
     points: { type: Number, required: false, default: 0 },
     rank: { type: String, required: false, default: '' },
+    savedPosts: { type: [String], required: false, default: [] },
     avatarImg: { type: ImageSchema, required: false, default: null },
     isAdmin: { type: Boolean, required: false, default: false },
     isActive: { type: Boolean, required: false, default: true },

@@ -243,4 +243,48 @@ const blockUser = (data: { email: string }) => {
   });
 };
 
-export default { createUser, login, loginWithGoogle, updateUser, getUser, blockUser };
+// save post
+
+const savePost = ({ ownerEmail, postId }: { ownerEmail: string; postId: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user = await UserModel.findOne({ email: ownerEmail });
+      if (!user) {
+        return reject({ message: 'User not found!' });
+      }
+      user.savedPosts.push(postId);
+      user.save();
+      resolve({
+        message: 'Post saved!'
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// unsave post
+
+const unsavePost = ({ ownerEmail, postId }: { ownerEmail: string; postId: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user = await UserModel.findOne({ email: ownerEmail });
+      if (!user) {
+        return reject({ message: 'User not found!' });
+      }
+      const index = user.savedPosts.findIndex((id) => id === postId);
+      if (index === -1) {
+        return reject({ message: 'Post not found!' });
+      }
+      user.savedPosts.splice(index, 1);
+      user.save();
+      resolve({
+        message: 'Post saved!'
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+export default { createUser, login, loginWithGoogle, updateUser, getUser, blockUser, savePost, unsavePost };

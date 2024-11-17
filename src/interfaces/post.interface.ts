@@ -1,3 +1,5 @@
+import { Document } from 'mongoose';
+
 export interface ActionInfo {
   ownerName: string;
   ownerEmail: string;
@@ -41,7 +43,7 @@ export interface Tag {
   value: string;
 }
 
-export interface Post {
+export interface Post extends Document {
   _id: string;
   title: string;
   tags: Tag[];
@@ -59,12 +61,16 @@ export interface Post {
   comments: Comment[];
   createdAt: Date;
   updatedAt: Date;
+  // virtual fields
+  isSaved?: boolean;
 }
 
 export interface PostQuery {
   page: number;
   limit: number;
-  ownerEmail: string;
+  userEmail: string;
+  ownerEmail?: string;
+  getSavedPosts?: boolean;
 }
 
 export interface CommentQuery {

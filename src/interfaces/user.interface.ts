@@ -57,6 +57,7 @@ export interface User extends Document {
   description: string;
   points: number;
   rank: string;
+  savedPosts: string[];
   avatarImg: ImageData;
   isAdmin: boolean;
   isActive: boolean;
