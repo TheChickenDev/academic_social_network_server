@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import { Job, Education, Contact, Introduction, User, Follower } from '../interfaces/user.interface';
+import { Job, Education, Contact, Introduction, User, Friend, Notification } from '../interfaces/user.interface';
 import { ImageSchema } from './utils.model';
 
 // job
@@ -57,16 +57,17 @@ const introductionSchema: Schema<Introduction> = new Schema(
   { _id: false }
 );
 
-// followers
+// notification
 
-const followersSchema: Schema<Follower> = new Schema(
+const notificationSchema: Schema<Notification> = new Schema(
   {
-    followerEmail: { type: String },
-    followDate: { type: Date },
-    followerName: { type: String },
-    followerAvatar: { type: ImageSchema }
+    userEmail: { type: String },
+    groupId: { type: String },
+    type: { type: String, enum: ['friend', 'post', 'postInGroup', 'comment'] },
+    content: { type: String },
+    isRead: { type: Boolean, default: false }
   },
-  { _id: false }
+  { timestamps: true }
 );
 
 // user
@@ -111,6 +112,16 @@ const userSchema: Schema<User> = new mongoose.Schema(
     points: { type: Number, required: false, default: 0 },
     rank: { type: String, required: false, default: '' },
     savedPosts: { type: [String], required: false, default: [] },
+    friends: [
+      new Schema(
+        {
+          friendEmail: { type: String, required: true },
+          status: { type: String, enum: ['pending', 'accepted', 'blocked'], required: true }
+        },
+        { _id: false }
+      )
+    ],
+    notifications: { type: [notificationSchema], required: false, default: [] },
     avatarImg: { type: ImageSchema, required: false, default: null },
     isAdmin: { type: Boolean, required: false, default: false },
     isActive: { type: Boolean, required: false, default: true },
@@ -123,5 +134,3 @@ const userSchema: Schema<User> = new mongoose.Schema(
 const UserModel: Model<User> = mongoose.model('User', userSchema);
 
 export default UserModel;
-
-export const FollowerModel: Model<Follower> = mongoose.model('Follower', followersSchema);

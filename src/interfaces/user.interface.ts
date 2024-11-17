@@ -36,12 +36,25 @@ export interface Introduction extends Document {
   contact: Contact;
 }
 
-// follower
-export interface Follower extends Document {
-  followerEmail: string;
-  followDate: Date;
-  followerName: string;
-  followerAvatar: ImageData;
+// friend
+
+export interface Friend {
+  friendEmail: string;
+  status: 'pending' | 'accepted' | 'blocked';
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// notification
+
+export interface Notification {
+  userEmail: string;
+  groupId: string;
+  type: 'friend' | 'post' | 'postInGroup' | 'comment';
+  content: string;
+  isRead: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // user
@@ -58,6 +71,8 @@ export interface User extends Document {
   points: number;
   rank: string;
   savedPosts: string[];
+  friends: Friend[];
+  notifications: Notification[];
   avatarImg: ImageData;
   isAdmin: boolean;
   isActive: boolean;

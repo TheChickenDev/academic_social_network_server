@@ -1,4 +1,4 @@
-import UserModel, { FollowerModel } from '../models/user.model';
+import UserModel from '../models/user.model';
 import { User, CreateUserInput, UpdateUserInput, UserQuery } from '../interfaces/user.interface';
 import bcrypt from 'bcrypt';
 import jwtService from './jwt';
@@ -231,6 +231,113 @@ const getUser = ({ email, _id }: UserQuery) => {
   });
 };
 
+// add friend
+
+const addFriend = (data: { email: string; friendEmail: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user: User = await UserModel.findOne({ email: data.email });
+      if (!user) {
+        reject({
+          message: 'User not found!'
+        });
+      }
+      const friend: User = await UserModel.findOne({ email: data.friendEmail });
+      if (!friend) {
+        reject({
+          message: 'Friend not found!'
+        });
+      }
+      const isFriend = user.friends?.find((f) => f.friendEmail === data.friendEmail);
+      if (isFriend) {
+        reject({
+          message: 'Friend already exists!'
+        });
+      }
+      user.friends?.push({ friendEmail: data.friendEmail, status: 'pending' });
+      await user.save();
+      resolve({
+        message: 'Add friend successful!',
+        data: user
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// accept friend
+
+const acceptFriend = (data: { email: string; friendEmail: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user: User = await UserModel.findOne({ email: data.email });
+      if (!user) {
+        reject({
+          message: 'User not found!'
+        });
+      }
+      const friend: User = await UserModel.findOne({ email: data.friendEmail });
+      if (!friend) {
+        reject({
+          message: 'Friend not found!'
+        });
+      }
+      const friendIndex = user.friends?.findIndex((f) => f.friendEmail === data.friendEmail);
+      if (friendIndex === -1) {
+        reject({
+          message: 'Friend not found!'
+        });
+      }
+      user.friends[friendIndex].status = 'accepted';
+      await user.save();
+      resolve({
+        message: 'Accept friend successful!',
+        data: user
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// remove friend
+
+const removeFriend = (data: { email: string; friendEmail: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user: User = await UserModel.findOne({ email: data.email });
+      if (!user) {
+        reject({
+          message: 'User not found!'
+        });
+      }
+      const friend: User = await UserModel.findOne({ email: data.friendEmail });
+      if (!friend) {
+        reject({
+          message: 'Friend not found!'
+        });
+      }
+      const friendIndex = user.friends?.findIndex((f) => f.friendEmail === data.friendEmail);
+      if (friendIndex === -1) {
+        reject({
+          message: 'Friend not found!'
+        });
+      }
+      user.friends.splice(friendIndex, 1);
+      await user.save();
+      resolve({
+        message: 'Remove friend successful!',
+        data: user
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// block user
+
 const blockUser = (data: { email: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -296,4 +403,16 @@ const unsavePost = ({ ownerEmail, postId }: { ownerEmail: string; postId: string
   });
 };
 
-export default { createUser, login, loginWithGoogle, updateUser, getUser, blockUser, savePost, unsavePost };
+export default {
+  createUser,
+  login,
+  loginWithGoogle,
+  updateUser,
+  getUser,
+  addFriend,
+  acceptFriend,
+  removeFriend,
+  blockUser,
+  savePost,
+  unsavePost
+};

@@ -83,6 +83,31 @@ export const getUser = async (request: Request, response: Response) => {
   }
 };
 
+// friend request controller
+
+export const controlFriendRequest = async (request: Request, response: Response) => {
+  try {
+    const { action } = request.query;
+    if (action === 'add') {
+      const result = await userService.addFriend(request.body);
+      return response.status(200).json(result);
+    } else if (action === 'accept') {
+      const result = await userService.acceptFriend(request.body);
+      return response.status(200).json(result);
+    } else if (action === 'remove') {
+      const result = await userService.removeFriend(request.body);
+      return response.status(200).json(result);
+    }
+    return response.status(400).json({
+      message: 'Invalid action!'
+    });
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
 // block user
 export const blockUser = async (request: Request, response: Response) => {
   try {
@@ -114,25 +139,23 @@ export const refreshToken = async (request: Request, response: Response) => {
   }
 };
 
-// save post
-export const savePost = async (request: Request, response: Response) => {
-  try {
-    const result = await userService.savePost(request.body);
-    return response.status(200).json(result);
-  } catch (error) {
-    return response.status(404).json({
-      message: error.message
-    });
-  }
-};
+// post request controller
 
-// unsave post
-export const unsavePost = async (request: Request, response: Response) => {
+export const controlPostRequest = async (request: Request, response: Response) => {
   try {
-    const result = await userService.unsavePost(request.body);
-    return response.status(200).json(result);
+    const { action } = request.query;
+    if (action === 'save') {
+      const result = await userService.savePost(request.body);
+      return response.status(200).json(result);
+    } else if (action === 'unsave') {
+      const result = await userService.unsavePost(request.body);
+      return response.status(200).json(result);
+    }
+    return response.status(400).json({
+      message: 'Invalid action!'
+    });
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
