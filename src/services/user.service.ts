@@ -132,7 +132,9 @@ const updateUser = (data: UpdateUserInput) => {
     try {
       let { email, introduction } = data;
 
-      introduction = JSON.parse(introduction as unknown as string);
+      if (introduction) {
+        introduction = JSON.parse(introduction as unknown as string);
+      }
 
       if (introduction?.contact?.phone) {
         const user: User = await UserModel.findOne({ 'introduction.contact.phone': introduction.contact.phone });
@@ -175,7 +177,18 @@ const updateUser = (data: UpdateUserInput) => {
 
       resolve({
         message: 'Update user successful!',
-        data: user
+        data: {
+          _id: user._id,
+          email: user.email,
+          fullName: user.fullName,
+          dateOfBirth: user.dateOfBirth,
+          gender: user.gender,
+          description: user.description,
+          introduction: user.introduction,
+          points: user.points,
+          rank: user.rank,
+          avatarImg: user.avatarImg?.url
+        }
       });
     } catch (error) {
       reject(error);
@@ -194,9 +207,7 @@ const getUser = ({ email, _id }: UserQuery) => {
         });
       }
       const posts = await PostModel.find({ ownerEmail: email });
-      const saved = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
       const friends = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      const activities = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
       resolve({
         message: 'Get user successful!',
         data: {
@@ -211,9 +222,7 @@ const getUser = ({ email, _id }: UserQuery) => {
           rank: user.rank,
           avatarImg: user.avatarImg?.url,
           posts,
-          saved,
-          friends,
-          activities
+          friends
         }
       });
     } catch (error) {

@@ -120,7 +120,7 @@ export const savePost = async (request: Request, response: Response) => {
     const result = await userService.savePost(request.body);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(400).json({
+    return response.status(404).json({
       message: error.message
     });
   }
@@ -132,7 +132,7 @@ export const unsavePost = async (request: Request, response: Response) => {
     const result = await userService.unsavePost(request.body);
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(400).json({
+    return response.status(404).json({
       message: error.message
     });
   }

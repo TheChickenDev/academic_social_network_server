@@ -19,7 +19,7 @@ router.post('/', createUser);
 router.post('/login', login);
 router.post('/login-google', loginWithGoogle);
 router.post('/refresh-token', refreshToken);
-router.patch('/', authUserMiddleware, upload.array('images', 2), uploadUserImagesToCloudinary, updateUser);
+router.patch('/', upload.array('images', 1), uploadUserImagesToCloudinary, updateUser);
 router.patch('/block', authUserMiddleware, blockUser);
 router.patch('/save-post', authUserMiddleware, savePost);
 router.patch('/unsave-post', authUserMiddleware, unsavePost);
