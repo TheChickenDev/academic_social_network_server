@@ -1,10 +1,12 @@
 import GroupModel from '../models/group.model';
 import UserModel from '../models/user.model';
 import { User } from '../interfaces/user.interface';
-import { GroupMemberModel } from '../models/group.model';
+import { GroupQuery } from '../interfaces/group.interface';
+
+// create group
 
 const createGroup = (data: {
-  email: string;
+  ownerEmail: string;
   name: string;
   description: string;
   cloudinaryUrls: string[];
@@ -12,7 +14,7 @@ const createGroup = (data: {
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email: data.email });
+      const user: User = await UserModel.findOne({ email: data.ownerEmail });
       if (!user) {
         reject({
           message: 'User not found!'
@@ -47,4 +49,38 @@ const createGroup = (data: {
   });
 };
 
-export default { createGroup };
+// get group
+
+const getGroups = ({ id, ownerEmail }: GroupQuery) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (id) {
+        const group = await GroupModel.findById(id);
+        if (!group) {
+          return reject({
+            message: 'Group not found!'
+          });
+        }
+        return resolve({
+          message: 'Get group successful!',
+          data: group
+        });
+      } else if (ownerEmail) {
+        const group = await GroupModel.findOne({ ownerEmail });
+        if (!group) {
+          return reject({
+            message: 'Group not found!'
+          });
+        }
+        return resolve({
+          message: 'Get group successful!',
+          data: group
+        });
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+export default { createGroup, getGroups };

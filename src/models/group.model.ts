@@ -21,9 +21,7 @@ const groupSchema: Schema<Group> = new Schema(
     description: { type: String, required: true },
     avatarImg: { type: ImageSchema, required: false, default: null },
     backgroundImg: { type: ImageSchema, required: false, default: null },
-    ownerEmail: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    ownerEmail: { type: String, required: true }
   },
   { timestamps: true }
 );

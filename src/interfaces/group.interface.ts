@@ -21,3 +21,9 @@ export interface Group extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// group post
+export interface GroupQuery {
+  id: string;
+  ownerEmail: string;
+}

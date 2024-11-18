@@ -18,3 +18,20 @@ export const createGroup = async (request: Request, response: Response) => {
     });
   }
 };
+
+// get group
+
+export const getGroups = async (request: Request, response: Response) => {
+  try {
+    const { id, ownerEmail } = request.query;
+    const result = await groupService.getGroups({
+      id: id as string,
+      ownerEmail: ownerEmail as string
+    });
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(404).json({
+      message: error.message
+    });
+  }
+};

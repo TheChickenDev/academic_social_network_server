@@ -56,3 +56,41 @@ export const uploadUserImagesToCloudinary = async (req: Request, res: Response, 
     next(error);
   }
 };
+
+export const uploadGroupImagesToCloudinary = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const files: CloudinaryFile[] = req.files as CloudinaryFile[];
+    if (!files || files.length === 0) {
+      return next();
+    }
+    let cloudinaryUrls: string[] = [];
+    let publicIds: string[] = [];
+    for (const file of files) {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'auto',
+          folder: 'academic_social_network/group'
+        } as any,
+        (err: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
+          if (err) {
+            console.error('Cloudinary upload error:', err);
+            return next(err);
+          }
+          if (!result) {
+            console.error('Cloudinary upload error: Result is undefined');
+            return next(new Error('Cloudinary upload result is undefined'));
+          }
+          cloudinaryUrls.push(result.secure_url);
+          publicIds.push(result.public_id);
+        }
+      );
+      uploadStream.end(file.buffer);
+    }
+    req.body.cloudinaryUrl = cloudinaryUrls;
+    req.body.publicId = publicIds;
+    next();
+  } catch (error) {
+    console.error('Error in uploadToCloudinary middleware:', error);
+    next(error);
+  }
+};
