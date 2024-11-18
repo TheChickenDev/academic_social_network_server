@@ -231,6 +231,34 @@ const getUser = ({ email, _id }: UserQuery) => {
   });
 };
 
+// get users
+
+const getUsers = (query: UserQuery) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const skip = (query?.page - 1) * query?.limit;
+      const user = await UserModel.findOne({ email: query?.email }).select('friends');
+      const exceptEmails = [...(user?.friends.map((f) => f.friendEmail) ?? []), query?.email];
+      const users = await UserModel.find({ email: { $nin: exceptEmails } })
+        .select('email fullName points rank avatarImg')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(query.limit);
+      if (!users) {
+        return reject({
+          message: 'No user found!'
+        });
+      }
+      resolve({
+        message: 'Get users successful!',
+        data: users.map((user) => ({ ...user.toObject(), avatarImg: user.avatarImg?.url ?? null }))
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 // add friend
 
 const addFriend = (data: { email: string; friendEmail: string }) => {
@@ -254,8 +282,10 @@ const addFriend = (data: { email: string; friendEmail: string }) => {
           message: 'Friend already exists!'
         });
       }
-      user.friends?.push({ friendEmail: data.friendEmail, status: 'pending' });
+      user.friends?.push({ friendEmail: data.friendEmail, status: 'requested' });
+      friend.friends?.push({ friendEmail: data.email, status: 'pending' });
       await user.save();
+      await friend.save();
       resolve({
         message: 'Add friend successful!',
         data: user
@@ -290,7 +320,15 @@ const acceptFriend = (data: { email: string; friendEmail: string }) => {
         });
       }
       user.friends[friendIndex].status = 'accepted';
+      const friendIndex2 = friend.friends?.findIndex((f) => f.friendEmail === data.email);
+      if (friendIndex2 === -1) {
+        reject({
+          message: 'Friend not found!'
+        });
+      }
+      friend.friends[friendIndex2].status = 'accepted';
       await user.save();
+      await friend.save();
       resolve({
         message: 'Accept friend successful!',
         data: user
@@ -325,10 +363,44 @@ const removeFriend = (data: { email: string; friendEmail: string }) => {
         });
       }
       user.friends.splice(friendIndex, 1);
+      const friendIndex2 = friend.friends?.findIndex((f) => f.friendEmail === data.email);
+      if (friendIndex2 === -1) {
+        reject({
+          message: 'Friend not found!'
+        });
+      }
+      friend.friends.splice(friendIndex2, 1);
       await user.save();
+      await friend.save();
       resolve({
         message: 'Remove friend successful!',
         data: user
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// get friends
+
+const getFriends = (data: { email: string; status: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user: User = await UserModel.findOne({ email: data.email });
+      if (!user) {
+        reject({
+          message: 'User not found!'
+        });
+      }
+      console.log(data);
+      const result = await UserModel.find({
+        email: { $in: user.friends.filter((f) => f.status === data.status).map((f) => f.friendEmail) }
+      }).select('email fullName points rank avatarImg');
+
+      resolve({
+        message: 'Get friends successful!',
+        data: result.map((user) => ({ ...user.toObject(), avatarImg: user.avatarImg?.url ?? null }))
       });
     } catch (error) {
       reject(error);
@@ -409,7 +481,9 @@ export default {
   loginWithGoogle,
   updateUser,
   getUser,
+  getUsers,
   addFriend,
+  getFriends,
   acceptFriend,
   removeFriend,
   blockUser,

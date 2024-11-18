@@ -9,7 +9,8 @@ import {
   refreshToken,
   getUser,
   controlPostRequest,
-  controlFriendRequest
+  controlFriendRequest,
+  getFriends
 } from '../controllers/user.controller';
 import { authUserMiddleware } from '../middlewares/auth';
 const router = express.Router();
@@ -21,6 +22,7 @@ router.post('/login-google', loginWithGoogle);
 router.post('/refresh-token', refreshToken);
 router.patch('/', authUserMiddleware, upload.array('images', 1), uploadUserImagesToCloudinary, updateUser);
 router.patch('/friends', authUserMiddleware, controlFriendRequest);
+router.get('/friends', getFriends);
 router.patch('/posts', authUserMiddleware, controlPostRequest);
 router.patch('/block', authUserMiddleware, blockUser);
 

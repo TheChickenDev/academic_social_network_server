@@ -40,7 +40,7 @@ export interface Introduction extends Document {
 
 export interface Friend {
   friendEmail: string;
-  status: 'pending' | 'accepted' | 'blocked';
+  status: 'requested' | 'pending' | 'accepted' | 'blocked';
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -103,4 +103,6 @@ export interface UpdateUserInput {
 export interface UserQuery {
   email: string;
   _id?: string;
+  page?: number;
+  limit?: number;
 }
