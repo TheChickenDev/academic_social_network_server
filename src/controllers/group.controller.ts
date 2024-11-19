@@ -13,7 +13,7 @@ export const createGroup = async (request: Request, response: Response) => {
         await cloudinary.uploader.destroy(publicId);
       }
     }
-    return response.status(404).json({
+    return response.status(400).json({
       message: error.message
     });
   }
@@ -23,14 +23,45 @@ export const createGroup = async (request: Request, response: Response) => {
 
 export const getGroups = async (request: Request, response: Response) => {
   try {
-    const { id, ownerEmail } = request.query;
+    const { id, ownerEmail, userEmail } = request.query;
     const result = await groupService.getGroups({
       id: id as string,
-      ownerEmail: ownerEmail as string
+      ownerEmail: ownerEmail as string,
+      userEmail: userEmail as string
     });
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(404).json({
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// update group
+
+export const updateGroup = async (request: Request, response: Response) => {
+  try {
+    const result = await groupService.updateGroup(request.body);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// get members
+
+export const getMembers = async (request: Request, response: Response) => {
+  try {
+    const { id, memberRole } = request.query;
+    const result = await groupService.getMembers({
+      id: id as string,
+      memberRole: (memberRole as 'member' | 'moderator' | 'admin') ?? 'member'
+    });
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
       message: error.message
     });
   }

@@ -207,7 +207,6 @@ const getUser = ({ email, _id }: UserQuery) => {
         });
       }
       const posts = await PostModel.find({ ownerEmail: email });
-      const friends = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
       resolve({
         message: 'Get user successful!',
         data: {
@@ -221,8 +220,8 @@ const getUser = ({ email, _id }: UserQuery) => {
           points: user.points,
           rank: user.rank,
           avatarImg: user.avatarImg?.url,
-          posts,
-          friends
+          numberOfPosts: posts?.length ?? 0,
+          numberOfFriends: user.friends?.length ?? 0
         }
       });
     } catch (error) {

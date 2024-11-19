@@ -80,15 +80,16 @@ export const uploadGroupImagesToCloudinary = async (req: Request, res: Response,
             console.error('Cloudinary upload error: Result is undefined');
             return next(new Error('Cloudinary upload result is undefined'));
           }
+
           cloudinaryUrls.push(result.secure_url);
           publicIds.push(result.public_id);
+          req.body.cloudinaryUrls = cloudinaryUrls;
+          req.body.publicIds = publicIds;
+          next();
         }
       );
       uploadStream.end(file.buffer);
     }
-    req.body.cloudinaryUrl = cloudinaryUrls;
-    req.body.publicId = publicIds;
-    next();
   } catch (error) {
     console.error('Error in uploadToCloudinary middleware:', error);
     next(error);

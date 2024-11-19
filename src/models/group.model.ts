@@ -3,24 +3,32 @@ import { Group, GroupMember } from '../interfaces/group.interface';
 import mongoose from 'mongoose';
 import { ImageSchema } from './utils.model';
 
-export const groupMemberSchema: Schema<GroupMember> = new Schema(
-  {
-    groupId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    groupName: { type: String, required: true },
-    role: { type: String, enum: ['Member', 'Moderator', 'Admin'], required: true },
-    contributionPoints: { type: Number, default: 0 },
-    title: { type: String, required: false, default: null },
-    joinDate: { type: Date, default: Date.now }
-  },
-  { _id: false }
-);
-
 const groupSchema: Schema<Group> = new Schema(
   {
     name: { type: String, required: true },
     description: { type: String, required: true },
     avatarImg: { type: ImageSchema, required: false, default: null },
     backgroundImg: { type: ImageSchema, required: false, default: null },
+    members: [
+      new Schema(
+        {
+          userEmail: { type: String, required: true },
+          role: { type: String, enum: ['pending', 'member', 'moderator', 'admin'], required: true },
+          joinDate: { type: Date, default: Date.now }
+        },
+        { _id: false }
+      )
+    ],
+    posts: [
+      new Schema(
+        {
+          postId: { type: Schema.Types.ObjectId, required: true },
+          status: { type: String, enum: ['pending', 'approved', 'rejected'], required: true }
+        },
+        { _id: false }
+      )
+    ],
+    isPrivate: { type: Boolean, required: true, default: false },
     ownerEmail: { type: String, required: true }
   },
   { timestamps: true }
@@ -29,5 +37,3 @@ const groupSchema: Schema<Group> = new Schema(
 const GroupModel = mongoose.model<Group>('Group', groupSchema);
 
 export default GroupModel;
-
-export const GroupMemberModel = mongoose.model<GroupMember>('GroupMember', groupMemberSchema);
