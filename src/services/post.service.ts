@@ -1,12 +1,26 @@
 import { ActionInfo, Post, PostQuery } from '../interfaces/post.interface';
 import UserModel from '../models/user.model';
 import PostModel from '../models/post.model';
+import GroupModel from '../models/group.model';
 
 // create post
 const createPost = (newPostData: Post) => {
   return new Promise(async (resolve, reject) => {
     try {
       const newPost = await PostModel.create(newPostData);
+      if (newPost.groupId) {
+        const group = await GroupModel.findOne({ _id: newPost.groupId });
+        if (!group) {
+          return reject({ message: 'Group not found!' });
+        }
+        if (group.isPrivate) {
+          group.posts.push({ postId: newPost._id, status: 'pending' });
+          await group.save();
+        } else {
+          group.posts.push({ postId: newPost._id, status: 'approved' });
+          await group.save();
+        }
+      }
       resolve({
         message: 'Post successful!',
         data: newPost
@@ -48,9 +62,34 @@ const getPosts = (query: PostQuery) => {
           message: 'Posts found!',
           data: posts
         });
+      } else if (query.groupId) {
+        const skip = (query.page - 1) * query.limit;
+        const group = await GroupModel.findOne({ _id: query.groupId });
+        if (!group) {
+          return reject({ message: 'Group not found!' });
+        }
+        const filteredPosts = group.posts.filter((post) => post.status === 'approved');
+        const posts = await PostModel.find({ _id: { $in: filteredPosts.map((post) => post.postId) } })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(query.limit);
+        const user = await UserModel.findOne({ email: query.userEmail }).select('savedPosts');
+        if (!posts) {
+          return reject({ message: 'Posts not found!' });
+        }
+        return resolve({
+          message: 'Posts found!',
+          data: posts.map((post) => ({
+            ...post.toObject(),
+            isSaved: user?.savedPosts?.includes(post._id) ?? false
+          }))
+        });
       }
       const skip = (query.page - 1) * query.limit;
-      const posts = await PostModel.find().sort({ createdAt: -1 }).skip(skip).limit(query.limit);
+      const posts = await PostModel.find({ groupId: '' }).sort({ createdAt: -1 }).skip(skip).limit(query.limit);
+      if (!posts) {
+        return reject({ message: 'Posts not found!' });
+      }
       const user = await UserModel.findOne({ email: query.userEmail }).select('savedPosts');
       resolve({
         message: 'Posts found!',
@@ -89,6 +128,14 @@ const deletePost = (id: string) => {
   return new Promise(async (resolve, reject) => {
     try {
       const post = await PostModel.findByIdAndDelete(id);
+      if (post.groupId) {
+        const group = await GroupModel.findOne({ _id: post.groupId });
+        if (!group) {
+          return reject({ message: 'Group not found!' });
+        }
+        group.posts = group.posts.filter((post) => post.postId !== id);
+        await group.save();
+      }
       if (!post) {
         return reject({ message: 'Post not found!' });
       }

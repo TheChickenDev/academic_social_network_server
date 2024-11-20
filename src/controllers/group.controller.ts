@@ -23,11 +23,15 @@ export const createGroup = async (request: Request, response: Response) => {
 
 export const getGroups = async (request: Request, response: Response) => {
   try {
-    const { id, ownerEmail, userEmail } = request.query;
+    const { id, ownerEmail, userEmail, memberEmail, getList, page, limit } = request.query;
     const result = await groupService.getGroups({
       id: id as string,
       ownerEmail: ownerEmail as string,
-      userEmail: userEmail as string
+      userEmail: userEmail as string,
+      memberEmail: memberEmail as string,
+      getList: getList === 'true',
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10
     });
     return response.status(200).json(result);
   } catch (error) {
@@ -54,12 +58,77 @@ export const updateGroup = async (request: Request, response: Response) => {
 
 export const getMembers = async (request: Request, response: Response) => {
   try {
-    const { id, memberRole } = request.query;
+    const { id, memberRole, userEmail } = request.query;
     const result = await groupService.getMembers({
       id: id as string,
-      memberRole: (memberRole as 'member' | 'moderator' | 'admin') ?? 'member'
+      memberRole: (memberRole as 'pending' | 'member' | 'moderator' | 'admin') ?? 'all',
+      userEmail: userEmail as string
     });
     return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// member request
+
+export const memberRequestController = async (request: Request, response: Response) => {
+  try {
+    const { action } = request.query;
+    if (action === 'request') {
+      const result = await groupService.requestToJoin(request.body);
+      return response.status(200).json(result);
+    } else if (action === 'accept') {
+      const result = await groupService.acceptJoinRequest(request.body);
+      return response.status(200).json(result);
+    } else if (action === 'leave' || action === 'remove' || action === 'reject') {
+      const result = await groupService.removeMember(request.body);
+      return response.status(200).json(result);
+    } else if (action === 'appoint') {
+      const result = await groupService.appointModerator(request.body);
+      return response.status(200).json(result);
+    } else if (action === 'dismissal') {
+      const result = await groupService.dismissalModerator(request.body);
+      return response.status(200).json(result);
+    }
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// get posts
+
+export const getPosts = async (request: Request, response: Response) => {
+  try {
+    const { id, postStatus } = request.query;
+    const result = await groupService.getPosts({
+      id: id as string,
+      postStatus: (postStatus as 'pending' | 'approved' | 'rejected' | 'all') ?? 'all'
+    });
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// post controller
+
+export const postRequestController = async (request: Request, response: Response) => {
+  try {
+    const { action } = request.query;
+    if (action === 'approve') {
+      const result = await groupService.approvePost(request.body);
+      return response.status(200).json(result);
+    } else if (action === 'reject') {
+      const result = await groupService.rejectPost(request.body);
+      return response.status(200).json(result);
+    }
   } catch (error) {
     return response.status(400).json({
       message: error.message

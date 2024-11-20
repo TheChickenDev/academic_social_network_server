@@ -2,6 +2,8 @@ import GroupModel from '../models/group.model';
 import UserModel from '../models/user.model';
 import { User } from '../interfaces/user.interface';
 import { GroupQuery } from '../interfaces/group.interface';
+import PostModel from '../models/post.model';
+import { Post } from '../interfaces/post.interface';
 
 // create group
 
@@ -51,7 +53,7 @@ const createGroup = (data: {
 
 // get group
 
-const getGroups = ({ id, ownerEmail, userEmail }: GroupQuery) => {
+const getGroups = ({ id, ownerEmail, userEmail, memberEmail, getList, page, limit }: GroupQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
       if (id) {
@@ -65,7 +67,9 @@ const getGroups = ({ id, ownerEmail, userEmail }: GroupQuery) => {
         const owner = await UserModel.findOne({ email: group.ownerEmail });
         const groupObject = group.toObject();
         const moderators = group.members?.filter((member) => member.role === 'moderator');
-        const moderatorsData = await UserModel.find({ email: { $in: moderators.map((mode) => mode.userEmail) } });
+        const moderatorsData = await UserModel.find({ email: { $in: moderators.map((mode) => mode.userEmail) } }).limit(
+          10
+        );
         const members = group.members?.filter((member) => member.role === 'member');
         const membersData = await UserModel.find({ email: { $in: members.map((member) => member.userEmail) } })
           .sort({ join: -1 })
@@ -82,6 +86,9 @@ const getGroups = ({ id, ownerEmail, userEmail }: GroupQuery) => {
           group.ownerEmail === userEmail || group.members?.some((member) => member.userEmail === userEmail)
             ? true
             : false;
+        const canEdit =
+          group.ownerEmail === userEmail ||
+          group.members?.some((member) => member.userEmail === userEmail && member.role === 'moderator');
         return resolve({
           message: 'Get group successful!',
           data: {
@@ -90,6 +97,8 @@ const getGroups = ({ id, ownerEmail, userEmail }: GroupQuery) => {
             ownerName: owner?.fullName,
             ownerAvatar: owner?.avatarImg?.url,
             ownerRank: owner?.rank,
+            membersCount: membersData.length + moderatorsData.length,
+            postsCount: group.posts?.length,
             members: membersData.map((member) => {
               const memberObject = member.toObject();
               return {
@@ -109,20 +118,76 @@ const getGroups = ({ id, ownerEmail, userEmail }: GroupQuery) => {
               };
             }),
             canJoin,
-            canPost
+            canPost,
+            canEdit
           }
         });
       } else if (ownerEmail) {
-        const group = await GroupModel.findOne({ ownerEmail });
-        if (!group) {
+        const groups = await GroupModel.find({ ownerEmail });
+        if (!groups) {
           return reject({
             message: 'Group not found!'
           });
         }
         return resolve({
-          message: 'Get group successful!',
-          data: group
+          message: 'Get groups successful!',
+          data: groups.map((group) => {
+            const groupObject = group.toObject();
+            return {
+              _id: groupObject._id,
+              name: groupObject.name,
+              isPrivate: groupObject.isPrivate,
+              avatarImg: groupObject.avatarImg?.url
+            };
+          })
         });
+      } else if (getList) {
+        if (memberEmail) {
+          const groups = await GroupModel.find({ 'members.userEmail': memberEmail });
+          if (!groups) {
+            return reject({
+              message: 'Group not found!'
+            });
+          }
+          return resolve({
+            message: 'Get groups successful!',
+            data: groups.map((group) => {
+              const groupObject = group.toObject();
+              return {
+                _id: groupObject._id,
+                name: groupObject.name,
+                isPrivate: groupObject.isPrivate,
+                avatarImg: groupObject.avatarImg?.url
+              };
+            })
+          });
+        } else if (userEmail) {
+          const skip = (page - 1) * limit;
+          const groups = await GroupModel.find({
+            ownerEmail: { $ne: userEmail },
+            'members.userEmail': { $nin: [userEmail] }
+          })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+          if (!groups) {
+            return reject({
+              message: 'Group not found!'
+            });
+          }
+          return resolve({
+            message: 'Get groups successful!',
+            data: groups.map((group) => {
+              const groupObject = group.toObject();
+              return {
+                _id: groupObject._id,
+                name: groupObject.name,
+                isPrivate: groupObject.isPrivate,
+                avatarImg: groupObject.avatarImg?.url
+              };
+            })
+          });
+        }
       }
     } catch (error) {
       reject(error);
@@ -150,8 +215,16 @@ const updateGroup = (data: {
       }
       group.name = data.name;
       group.description = data.description;
+      if (group.isPrivate === true && data.isPrivate === false) {
+        group.members = group.members?.map((member) => {
+          if (member.role === 'pending') {
+            member.role = 'member';
+            member.joinDate = new Date();
+          }
+          return member;
+        });
+      }
       group.isPrivate = data.isPrivate;
-      console.log(data.cloudinaryUrls);
       if (data.cloudinaryUrls && data.cloudinaryUrls[0]) {
         group.avatarImg = { url: data.cloudinaryUrls[0], publicId: data.publicIds[0] };
       }
@@ -174,7 +247,7 @@ const updateGroup = (data: {
 
 // get members
 
-const getMembers = ({ id, memberRole }: GroupQuery) => {
+const getMembers = ({ id, memberRole, userEmail }: GroupQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
       const group = await GroupModel.findById(id);
@@ -183,16 +256,37 @@ const getMembers = ({ id, memberRole }: GroupQuery) => {
           message: 'Group not found!'
         });
       }
-      const members = group.members?.filter((member) => member.role === memberRole);
+      let members = [];
+      if (memberRole === 'all') {
+        members = group.members;
+      } else {
+        members = group.members?.filter((member) => member.role === memberRole);
+      }
       const membersData = await UserModel.find({ email: { $in: members.map((member) => member.userEmail) } });
       return resolve({
         message: 'Get members successful!',
         data: membersData.map((member) => {
           const memberObject = member.toObject();
+          const temp = members.find((mem) => mem.userEmail === memberObject.email);
+          if (userEmail && memberObject.email !== userEmail) {
+            return {
+              role: temp?.role,
+              userEmail: memberObject?.email,
+              userName: memberObject?.fullName,
+              userAvatar: memberObject?.avatarImg?.url,
+              userRank: memberObject?.rank,
+              canAddFriend: memberObject.friends?.some((friend) => friend.friendEmail === userEmail) ? false : true,
+              joinDate: temp?.joinDate
+            };
+          }
           return {
+            role: temp?.role,
             userEmail: memberObject?.email,
             userName: memberObject?.fullName,
-            userAvatar: memberObject?.avatarImg?.url
+            userAvatar: memberObject?.avatarImg?.url,
+            userRank: memberObject?.rank,
+            canAddFriend: false,
+            joinDate: temp?.joinDate
           };
         })
       });
@@ -202,4 +296,263 @@ const getMembers = ({ id, memberRole }: GroupQuery) => {
   });
 };
 
-export default { createGroup, getGroups, updateGroup, getMembers };
+// requestToJoin
+
+const requestToJoin = ({ id, userEmail }: { id: string; userEmail: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findById(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      if (group.members?.some((member) => member.userEmail === userEmail)) {
+        return reject({
+          message: 'You are already a member of this group!'
+        });
+      }
+      if (group.isPrivate) {
+        group.members?.push({
+          userEmail,
+          role: 'pending',
+          joinDate: new Date()
+        });
+      } else {
+        group.members?.push({
+          userEmail,
+          role: 'member',
+          joinDate: new Date()
+        });
+      }
+      await group.save();
+      return resolve({
+        message: 'Request to join successful!'
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// accept request
+
+const acceptJoinRequest = ({ id, userEmail }: { id: string; userEmail: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findById(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      const member = group.members?.find((member) => member.userEmail === userEmail);
+      if (!member) {
+        return reject({
+          message: 'Member not found!'
+        });
+      }
+      member.role = 'member';
+      member.joinDate = new Date();
+      await group.save();
+      return resolve({
+        message: 'Accept request successful!',
+        data: member
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// remove member
+
+const removeMember = ({ id, userEmail }: { id: string; userEmail: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findById(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      const memberIndex = group.members?.findIndex((member) => member.userEmail === userEmail);
+      if (memberIndex === -1) {
+        return reject({
+          message: 'Member not found!'
+        });
+      }
+      group.members?.splice(memberIndex, 1);
+      await group.save();
+      return resolve({
+        message: 'Remove member successful!'
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// appoint moderator
+
+const appointModerator = ({ id, userEmail }: { id: string; userEmail: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findById(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      const member = group.members?.find((member) => member.userEmail === userEmail);
+      if (!member) {
+        return reject({
+          message: 'Member not found!'
+        });
+      }
+      member.role = 'moderator';
+      await group.save();
+      return resolve({
+        message: 'Appoint member successful!',
+        data: member
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// dismissal moderator
+
+const dismissalModerator = ({ id, userEmail }: { id: string; userEmail: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findById(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      const member = group.members?.find((member) => member.userEmail === userEmail);
+      if (!member) {
+        return reject({
+          message: 'Member not found!'
+        });
+      }
+      member.role = 'member';
+      await group.save();
+      return resolve({
+        message: 'Dismissal member successful!',
+        data: member
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// get posts
+
+const getPosts = ({ id, postStatus }: GroupQuery) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findById(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      let postsData = [];
+      if (postStatus === 'all') {
+        postsData = await PostModel.find({ _id: { $in: group.posts.map((p) => p.postId) } });
+      } else {
+        const filteredPosts = group.posts?.filter((post) => post.status === postStatus);
+        postsData = await PostModel.find({ _id: { $in: filteredPosts.map((p) => p.postId) } });
+      }
+      return resolve({
+        message: 'Get posts successful!',
+        data: postsData.map((post: Post) => ({
+          _id: post._id,
+          title: post.title,
+          ownerName: post.ownerName,
+          ownerEmail: post.ownerEmail,
+          createdAt: post.createdAt
+        }))
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// approve post
+
+const approvePost = ({ id, postId }: { id: string; postId: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findById(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      const post = group.posts?.find((p) => p.postId.toString() === postId);
+      if (!post) {
+        return reject({
+          message: 'Post not found!'
+        });
+      }
+      post.status = 'approved';
+      await group.save();
+      return resolve({
+        message: 'Approve post successful!',
+        data: post
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// reject post
+
+const rejectPost = ({ id, postId }: { id: string; postId: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findById(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      const postIndex = group.posts?.findIndex((p) => p.postId === postId);
+      if (postIndex === -1) {
+        return reject({
+          message: 'Post not found!'
+        });
+      }
+      group.posts?.splice(postIndex, 1);
+      await group.save();
+      return resolve({
+        message: 'reject post successful!'
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+export default {
+  createGroup,
+  getGroups,
+  updateGroup,
+  getMembers,
+  requestToJoin,
+  acceptJoinRequest,
+  removeMember,
+  appointModerator,
+  dismissalModerator,
+  getPosts,
+  approvePost,
+  rejectPost
+};

@@ -90,7 +90,6 @@ const postSchema: Schema<Post> = new Schema(
     ownerAvatar: { type: String, required: true },
     ownerEmail: { type: String, required: true },
     groupId: { type: String, required: false, default: '' },
-    groupName: { type: String, required: false, default: '' },
     content: { type: Schema.Types.Mixed, required: true },
     numberOfLikes: { type: Number, required: true, default: 0 },
     likes: [

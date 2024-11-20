@@ -16,11 +16,12 @@ export const createPost = async (request: Request, response: Response) => {
 // get posts
 export const getPosts = async (request: Request, response: Response) => {
   try {
-    const { page, limit, ownerEmail, userEmail, getSavedPosts } = request.query;
+    const { page, limit, ownerEmail, userEmail, groupId, getSavedPosts } = request.query;
     const result = await postService.getPosts({
       page: parseInt(page as string, 10) ?? 1,
       limit: parseInt(limit as string, 10) ?? 10,
       userEmail: userEmail as string,
+      groupId: groupId as string,
       ownerEmail: ownerEmail as string,
       getSavedPosts: getSavedPosts === 'true'
     });

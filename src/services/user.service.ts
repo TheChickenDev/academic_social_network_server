@@ -221,7 +221,8 @@ const getUser = ({ email, _id }: UserQuery) => {
           rank: user.rank,
           avatarImg: user.avatarImg?.url,
           numberOfPosts: posts?.length ?? 0,
-          numberOfFriends: user.friends?.length ?? 0
+          numberOfFriends: user.friends?.length ?? 0,
+          friends: user.friends
         }
       });
     } catch (error) {
@@ -392,7 +393,6 @@ const getFriends = (data: { email: string; status: string }) => {
           message: 'User not found!'
         });
       }
-      console.log(data);
       const result = await UserModel.find({
         email: { $in: user.friends.filter((f) => f.status === data.status).map((f) => f.friendEmail) }
       }).select('email fullName points rank avatarImg');

@@ -11,7 +11,7 @@ export interface GroupMember {
 //
 
 export interface GroupPost {
-  postId: ObjectId;
+  postId: string;
   status: 'pending' | 'approved' | 'rejected';
 }
 
@@ -32,8 +32,13 @@ export interface Group extends Document {
 
 // group post
 export interface GroupQuery {
-  id: string;
+  id?: string;
   ownerEmail?: string;
   userEmail?: string;
-  memberRole?: 'member' | 'moderator' | 'admin';
+  memberEmail?: string;
+  getList?: boolean;
+  page?: number;
+  limit?: number;
+  memberRole?: 'pending' | 'member' | 'moderator' | 'admin' | 'all';
+  postStatus?: 'pending' | 'approved' | 'rejected' | 'all';
 }

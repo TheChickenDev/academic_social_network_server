@@ -51,7 +51,6 @@ export interface Post extends Document {
   ownerAvatar: string;
   ownerEmail: string;
   groupId: string;
-  groupName: string;
   content: object;
   numberOfLikes: number;
   likes: ActionInfo[];
@@ -69,6 +68,7 @@ export interface PostQuery {
   page: number;
   limit: number;
   userEmail: string;
+  groupId?: string;
   ownerEmail?: string;
   getSavedPosts?: boolean;
 }

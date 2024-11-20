@@ -2,7 +2,7 @@ import { Document, ObjectId } from 'mongoose';
 import { ImageData } from './utils.interface';
 
 // job
-export interface Job extends Document {
+export interface Job {
   profession: string;
   company: string;
   fromDate: Date;
@@ -13,7 +13,7 @@ export interface Job extends Document {
 }
 
 // education
-export interface Education extends Document {
+export interface Education {
   schoolName: string;
   fromDate: Date;
   toDate: Date;
@@ -22,14 +22,14 @@ export interface Education extends Document {
 }
 
 // contact
-export interface Contact extends Document {
+export interface Contact {
   phone: string;
   links: string[];
   isPrivate: boolean;
 }
 
 // introduction
-export interface Introduction extends Document {
+export interface Introduction {
   jobs: Job[];
   educations: Education[];
   address: string;
