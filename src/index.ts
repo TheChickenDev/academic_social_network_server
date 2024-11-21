@@ -4,6 +4,9 @@ import mongoose from 'mongoose';
 import routes from '../src/routes';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import messageService from './services/message.service';
 
 dotenv.config();
 
@@ -30,6 +33,47 @@ mongoose
     console.log(err);
   });
 
-app.listen(port, () => {
-  console.log('Server is running on port ', port);
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+const userSocketMap = new Map<string, string>();
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  const userEmail = socket.handshake.query.userEmail as string;
+  userSocketMap.set(userEmail, socket.id);
+
+  socket.on(
+    'chat message',
+    async (msg: {
+      conversationId: string;
+      senderEmail: string;
+      receiverEmail: string;
+      type: 'text' | 'image' | 'video' | 'audio' | 'icon';
+      content: string;
+    }) => {
+      const result = await messageService.createMessage(msg);
+      const senderSocketId = userSocketMap.get(msg.senderEmail);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit('chat message', result);
+      }
+      const receiverSocketId = userSocketMap.get(msg.receiverEmail);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('chat message', result);
+      }
+    }
+  );
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+    userSocketMap.delete(userEmail);
+  });
+});
+
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
