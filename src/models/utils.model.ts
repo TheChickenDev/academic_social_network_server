@@ -1,4 +1,4 @@
-import mongoose, { Schema, Model } from 'mongoose';
+import { Schema } from 'mongoose';
 import { ImageData } from '../interfaces/utils.interface';
 
 export const ImageSchema: Schema<ImageData> = new Schema(

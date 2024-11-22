@@ -7,6 +7,23 @@ import { Post } from '../interfaces/post.interface';
 import { SearchQueryParams } from '../interfaces/utils.interface';
 import { User } from '../interfaces/user.interface';
 import { Group } from '../interfaces/group.interface';
+import RankModel from '../models/rank.model';
+
+export const updateUserRank = (additionalPoints: number, email: string) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user = await UserModel.findOne({ email });
+      if (user) {
+        const rank = await RankModel.findOne({ point: { $lte: user.points + additionalPoints } }).sort({ point: -1 });
+        user.rank = rank?.name ? rank.name : '';
+        user.points += additionalPoints;
+        user.save();
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 export const searchAll = ({ q, email }: { q: string; email: string }) => {
   return new Promise(async (resolve, reject) => {
@@ -64,28 +81,28 @@ export const searchPosts = ({ q, filter, page, limit }: SearchQueryParams) => {
       const skip = (page - 1) * limit;
       switch (filter) {
         case 'newest':
-          posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') } })
+          posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') }, groupId: '' })
             .sort({ createdAt: -1 })
             .limit(limit)
             .skip(skip)
             .exec();
           break;
         case 'liked':
-          posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') } })
+          posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') }, groupId: '' })
             .sort({ numberOfLikes: -1 })
             .limit(limit)
             .skip(skip)
             .exec();
           break;
         case 'disliked':
-          posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') } })
+          posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') }, groupId: '' })
             .sort({ numberOfDislikes: -1 })
             .limit(limit)
             .skip(skip)
             .exec();
           break;
         default:
-          posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') } })
+          posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') }, groupId: '' })
             .limit(limit)
             .skip(skip)
             .exec();

@@ -2,6 +2,8 @@ import { ActionInfo, Post, PostQuery } from '../interfaces/post.interface';
 import UserModel from '../models/user.model';
 import PostModel from '../models/post.model';
 import GroupModel from '../models/group.model';
+import { DISLIKE_POINT, LIKE_POINT, POST_POINT } from '../constants/point';
+import { updateUserRank } from './utils.service';
 
 // create post
 const createPost = (newPostData: Post) => {
@@ -21,6 +23,7 @@ const createPost = (newPostData: Post) => {
           await group.save();
         }
       }
+      updateUserRank(POST_POINT, newPost.ownerEmail);
       resolve({
         message: 'Post successful!',
         data: newPost
@@ -139,6 +142,7 @@ const deletePost = (id: string) => {
       if (!post) {
         return reject({ message: 'Post not found!' });
       }
+      updateUserRank(-POST_POINT, post.ownerEmail);
       resolve({
         message: 'Post deleted!'
       });
@@ -187,6 +191,7 @@ const likePost = (postId: string, actionInfo: ActionInfo) => {
         post.likes.splice(existLikeIndex, 1);
         post.numberOfLikes = post.likes.length;
         post.save();
+        updateUserRank(DISLIKE_POINT, post.ownerEmail);
         return resolve({
           message: 'Post unliked!',
           data: post
@@ -195,6 +200,7 @@ const likePost = (postId: string, actionInfo: ActionInfo) => {
       post.likes.push(actionInfo);
       post.numberOfLikes = post.likes.length;
       post.save();
+      updateUserRank(LIKE_POINT, post.ownerEmail);
       resolve({
         message: 'Post liked!',
         data: post
@@ -222,6 +228,7 @@ const dislikePost = (postId: string, actionInfo: ActionInfo) => {
         post.dislikes.splice(existDislikeIndex, 1);
         post.numberOfDislikes = post.dislikes.length;
         post.save();
+        updateUserRank(LIKE_POINT, post.ownerEmail);
         return resolve({
           message: 'Post undisliked!',
           data: post
@@ -230,6 +237,7 @@ const dislikePost = (postId: string, actionInfo: ActionInfo) => {
       post.dislikes.push(actionInfo);
       post.numberOfDislikes = post.dislikes.length;
       post.save();
+      updateUserRank(DISLIKE_POINT, post.ownerEmail);
       resolve({
         message: 'Post disliked!',
         data: post

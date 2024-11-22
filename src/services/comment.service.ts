@@ -1,6 +1,8 @@
 import { ActionInfo, Comment, CommentQuery, Reply } from '../interfaces/post.interface';
 import PostModel, { CommentModel } from '../models/post.model';
 import { Document } from 'mongoose';
+import { updateUserRank } from './utils.service';
+import { COMMENT_POINT } from '../constants/point';
 
 // comment
 const comment = (commentData: Comment) => {
@@ -13,6 +15,8 @@ const comment = (commentData: Comment) => {
       const newComment = await CommentModel.create(commentData);
       post.numberOfComments += 1;
       post.save();
+      updateUserRank(COMMENT_POINT, commentData.ownerEmail);
+      updateUserRank(COMMENT_POINT, post.ownerEmail);
       resolve({
         message: 'Comment successful!',
         data: newComment
@@ -44,6 +48,8 @@ const replyComment = (replyData: Reply) => {
       comment.save();
       post.numberOfComments += 1;
       post.save();
+      updateUserRank(COMMENT_POINT, replyData.ownerEmail);
+      updateUserRank(COMMENT_POINT, post.ownerEmail);
       resolve({
         message: 'Comment successful!',
         data: newReply
