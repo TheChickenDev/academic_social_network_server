@@ -126,7 +126,9 @@ const userSchema: Schema<User> = new mongoose.Schema(
     isAdmin: { type: Boolean, required: false, default: false },
     isActive: { type: Boolean, required: false, default: true },
     accessToken: { type: String, required: false, default: null },
-    refreshToken: { type: String, required: false, default: null }
+    refreshToken: { type: String, required: false, default: null },
+    resetPasswordToken: { type: String, required: false, default: null },
+    resetPasswordExpire: { type: Date, required: false, default: null }
   },
   { timestamps: true }
 );

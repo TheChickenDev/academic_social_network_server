@@ -78,6 +78,8 @@ export interface User extends Document {
   isActive: boolean;
   accessToken: string;
   refreshToken: string;
+  resetPasswordToken: string;
+  resetPasswordExpire: Date;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -3,6 +3,16 @@ import { User, CreateUserInput, UpdateUserInput, UserQuery } from '../interfaces
 import bcrypt from 'bcrypt';
 import jwtService from './jwt';
 import PostModel from '../models/post.model';
+import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+  service: process.env.MY_EMAIL_SERVICE,
+  auth: {
+    user: process.env.MY_EMAIL,
+    pass: process.env.MY_EMAIL_PASSWORD
+  }
+});
 
 // register
 const createUser = (newUserData: CreateUserInput) => {
@@ -13,7 +23,7 @@ const createUser = (newUserData: CreateUserInput) => {
 
       const existEmail = await UserModel.findOne({ email });
       if (existEmail) {
-        reject({
+        return reject({
           message: 'Email already exists!'
         });
       }
@@ -22,9 +32,26 @@ const createUser = (newUserData: CreateUserInput) => {
         email,
         password: hashPassword
       });
+
+      const access_token = await jwtService.generateAccessToken({
+        email: newUser.email,
+        isAdmin: newUser.isAdmin,
+        fullName: newUser.fullName,
+        avatar: newUser.avatarImg?.url
+      });
+
+      const refresh_token = await jwtService.generateRefreshToken({
+        email: newUser.email,
+        isAdmin: newUser.isAdmin,
+        fullName: newUser.fullName,
+        avatar: newUser.avatarImg?.url
+      });
       resolve({
         message: 'Create account successful!',
-        data: newUser
+        data: {
+          access_token,
+          refresh_token
+        }
       });
     } catch (error) {
       reject(error);
@@ -38,13 +65,13 @@ const login = (email: string, password: string) => {
     try {
       const user: User = await UserModel.findOne({ email });
       if (!user) {
-        resolve({
+        return reject({
           message: 'Account does not exist!'
         });
       }
       const isValidPassword = bcrypt.compareSync(password, user.password);
       if (!isValidPassword) {
-        resolve({
+        return reject({
           message: 'Incorrect password!'
         });
       } else {
@@ -120,6 +147,100 @@ const loginWithGoogle = (data: { email: string; name: string; googleId: string; 
           refresh_token
         }
       });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// reset password
+
+const forgotPassword = ({ email, baseURL }: { email: string; baseURL: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Find the user by email
+      const user = await UserModel.findOne({ email });
+
+      if (!user) {
+        return reject({ message: 'No user found' });
+      }
+
+      const token = jwt.sign({ id: user._id, email }, process.env.REFRESH_TOKEN, { expiresIn: '15m' });
+      user.resetPasswordToken = token;
+      user.resetPasswordExpire = new Date(Date.now() + 900000); // 15 minutes
+      await user.save();
+
+      // Send the password reset email
+      const resetUrl = `${baseURL}reset-password/${token}`;
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: 'Password Reset Request',
+        html: `
+        <p>You requested a password reset. Click the link below to reset your password:</p>
+        <a href="${resetUrl}">${resetUrl}</a>
+      `
+      };
+
+      await transporter.sendMail(mailOptions);
+      resolve({ message: 'Password reset email sent' });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// reset password
+
+const resetPassword = async ({ token, password }: { token: string; password: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const decoded = jwt.verify(token, process.env.REFRESH_TOKEN);
+      if (typeof decoded === 'string' || !decoded.email) {
+        return reject({ message: 'Invalid or expired password reset token' });
+      }
+      const { email } = decoded;
+
+      const user = await UserModel.findOne({
+        email,
+        resetPasswordToken: token,
+        resetPasswordExpire: { $gt: Date.now() }
+      });
+
+      if (!user) {
+        return reject({ message: 'Invalid or expired password reset token' });
+      }
+
+      const hashPassword = bcrypt.hashSync(password, 12);
+      user.password = hashPassword;
+      user.resetPasswordToken = null;
+      user.resetPasswordExpire = null;
+      await user.save();
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: 'Password Reset Confirmation',
+        html: `
+      <p>Your password has been successfully reset. If you did not initiate this request, please contact us immediately.</p>
+    `
+      };
+      await transporter.sendMail(mailOptions);
+
+      const access_token = await jwtService.generateAccessToken({
+        email: user.email,
+        isAdmin: user.isAdmin,
+        fullName: user.fullName,
+        avatar: user.avatarImg.url
+      });
+      const refresh_token = await jwtService.generateRefreshToken({
+        email: user.email,
+        isAdmin: user.isAdmin,
+        fullName: user.fullName,
+        avatar: user.avatarImg.url
+      });
+
+      resolve({ message: 'Password reset successful', data: { access_token, refresh_token } });
     } catch (error) {
       reject(error);
     }
@@ -478,6 +599,8 @@ export default {
   createUser,
   login,
   loginWithGoogle,
+  forgotPassword,
+  resetPassword,
   updateUser,
   getUser,
   getUsers,

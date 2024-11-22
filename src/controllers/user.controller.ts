@@ -7,14 +7,14 @@ import { refreshTokenService } from '../services/jwt';
 // create user
 export const createUser = async (request: Request, response: Response) => {
   try {
-    const { password, confirmPassword } = request.body;
+    const { password, confirm_password } = request.body;
     if (isValidInputPassword(password) === false) {
       return response.status(400).json({
         message:
           'Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special character!'
       });
     }
-    if (password !== confirmPassword) {
+    if (password !== confirm_password) {
       return response.status(400).json({
         message: 'Password and confirm password do not match!'
       });
@@ -45,6 +45,45 @@ export const login = async (request: Request, response: Response) => {
 export const loginWithGoogle = async (request: Request, response: Response) => {
   try {
     const result = await userService.loginWithGoogle(request.body);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// forgot password
+
+export const forgotPassword = async (request: Request, response: Response) => {
+  try {
+    const baseURL = request.headers.referer;
+    const result = await userService.forgotPassword({ ...request.body, baseURL });
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
+// reset password
+
+export const resetPassword = async (request: Request, response: Response) => {
+  try {
+    const { password, confirm_password } = request.body;
+    if (isValidInputPassword(password) === false) {
+      return response.status(400).json({
+        message:
+          'Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special character!'
+      });
+    }
+    if (password !== confirm_password) {
+      return response.status(400).json({
+        message: 'Password and confirm password do not match!'
+      });
+    }
+    const result = await userService.resetPassword(request.body);
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
