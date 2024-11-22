@@ -86,8 +86,8 @@ const postSchema: Schema<Post> = new Schema(
   {
     title: { type: String, required: true },
     tags: { type: [tagSchema], required: false, default: [] },
-    ownerName: { type: String, required: true },
-    ownerAvatar: { type: String, required: true },
+    ownerName: { type: String, required: false, default: '' },
+    ownerAvatar: { type: String, required: false, default: '' },
     ownerEmail: { type: String, required: true },
     groupId: { type: String, required: false, default: '' },
     content: { type: Schema.Types.Mixed, required: true },
