@@ -562,10 +562,10 @@ const blockUser = (data: { email: string }) => {
 
 // save post
 
-const savePost = ({ ownerEmail, postId }: { ownerEmail: string; postId: string }) => {
+const savePost = ({ userId, postId }: { userId: string; postId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user = await UserModel.findOne({ email: ownerEmail });
+      const user = await UserModel.findById(userId);
       if (!user) {
         return reject({ message: 'User not found!' });
       }
@@ -582,10 +582,10 @@ const savePost = ({ ownerEmail, postId }: { ownerEmail: string; postId: string }
 
 // unsave post
 
-const unsavePost = ({ ownerEmail, postId }: { ownerEmail: string; postId: string }) => {
+const unsavePost = ({ userId, postId }: { userId: string; postId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user = await UserModel.findOne({ email: ownerEmail });
+      const user = await UserModel.findById(userId);
       if (!user) {
         return reject({ message: 'User not found!' });
       }
