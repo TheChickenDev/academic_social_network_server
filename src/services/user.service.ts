@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 const createUser = (newUserData: CreateUserInput) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const { email, password } = newUserData;
+      const { email, password, fullName } = newUserData;
       const hashPassword = bcrypt.hashSync(password, 12);
 
       const existEmail = await UserModel.findOne({ email });
@@ -30,10 +30,12 @@ const createUser = (newUserData: CreateUserInput) => {
 
       const newUser = await UserModel.create({
         email,
-        password: hashPassword
+        password: hashPassword,
+        fullName
       });
 
       const access_token = await jwtService.generateAccessToken({
+        _id: newUser._id.toString(),
         email: newUser.email,
         isAdmin: newUser.isAdmin,
         fullName: newUser.fullName,
@@ -41,6 +43,7 @@ const createUser = (newUserData: CreateUserInput) => {
       });
 
       const refresh_token = await jwtService.generateRefreshToken({
+        _id: newUser._id.toString(),
         email: newUser.email,
         isAdmin: newUser.isAdmin,
         fullName: newUser.fullName,
@@ -76,12 +79,14 @@ const login = (email: string, password: string) => {
         });
       } else {
         const access_token = await jwtService.generateAccessToken({
+          _id: user._id.toString(),
           email: user.email,
           isAdmin: user.isAdmin,
           fullName: user.fullName,
           avatar: user.avatarImg?.url
         });
         const refresh_token = await jwtService.generateRefreshToken({
+          _id: user._id.toString(),
           email: user.email,
           isAdmin: user.isAdmin,
           fullName: user.fullName,
@@ -128,12 +133,14 @@ const loginWithGoogle = (data: { email: string; name: string; googleId: string; 
         });
       }
       const access_token = await jwtService.generateAccessToken({
+        _id: user._id.toString(),
         email: user.email,
         isAdmin: user.isAdmin,
         fullName: user.fullName,
         avatar: user.avatarImg.url
       });
       const refresh_token = await jwtService.generateRefreshToken({
+        _id: user._id.toString(),
         email: user.email,
         isAdmin: user.isAdmin,
         fullName: user.fullName,
@@ -228,12 +235,14 @@ const resetPassword = async ({ token, password }: { token: string; password: str
       await transporter.sendMail(mailOptions);
 
       const access_token = await jwtService.generateAccessToken({
+        _id: user._id.toString(),
         email: user.email,
         isAdmin: user.isAdmin,
         fullName: user.fullName,
         avatar: user.avatarImg.url
       });
       const refresh_token = await jwtService.generateRefreshToken({
+        _id: user._id.toString(),
         email: user.email,
         isAdmin: user.isAdmin,
         fullName: user.fullName,

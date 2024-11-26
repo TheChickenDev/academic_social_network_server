@@ -471,13 +471,16 @@ const getPosts = ({ id, postStatus }: GroupQuery) => {
       }
       return resolve({
         message: 'Get posts successful!',
-        data: postsData.map((post: Post) => ({
-          _id: post._id,
-          title: post.title,
-          ownerName: post.ownerName,
-          ownerEmail: post.ownerEmail,
-          createdAt: post.createdAt
-        }))
+        data: postsData.map(async (post: Post) => {
+          const user = await UserModel.findById(post).select('fullName email');
+          return {
+            _id: post._id,
+            title: post.title,
+            ownerName: user.fullName,
+            ownerEmail: user.email,
+            createdAt: post.createdAt
+          };
+        })
       });
     } catch (error) {
       reject(error);

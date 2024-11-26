@@ -1,61 +1,32 @@
 import { Document } from 'mongoose';
 
-export interface ActionInfo {
-  ownerName: string;
-  ownerEmail: string;
-}
-
-export interface Reply {
+export interface Comment extends Document {
   _id: string;
   postId: string;
-  commentId: string;
-  ownerName: string;
-  ownerAvatar: string;
-  ownerEmail: string;
+  parentId: string;
+  ownerId: string;
   content: object;
   numberOfLikes: number;
-  likes: ActionInfo[];
+  likedBy: String[];
   numberOfDislikes: number;
-  dislikes: ActionInfo[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Comment {
-  _id: string;
-  postId: string;
-  ownerName: string;
-  ownerAvatar: string;
-  ownerEmail: string;
-  content: object;
-  numberOfLikes: number;
-  likes: ActionInfo[];
-  numberOfDislikes: number;
-  dislikes: ActionInfo[];
+  dislikedBy: String[];
   numberOfRyplies: number;
-  replies: Reply[];
+  replies: Comment[];
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface Tag {
-  label: string;
-  value: string;
 }
 
 export interface Post extends Document {
   _id: string;
   title: string;
-  tags: Tag[];
-  ownerName: string;
-  ownerAvatar: string;
-  ownerEmail: string;
+  tags: string[];
+  ownerId: string;
   groupId: string;
   content: object;
   numberOfLikes: number;
-  likes: ActionInfo[];
+  likedBy: String[];
   numberOfDislikes: number;
-  dislikes: ActionInfo[];
+  dislikedBy: String[];
   numberOfComments: number;
   comments: Comment[];
   createdAt: Date;
@@ -67,10 +38,9 @@ export interface Post extends Document {
 export interface PostQuery {
   page: number;
   limit: number;
-  userEmail: string;
+  userId?: string;
   groupId?: string;
-  ownerEmail?: string;
-  getSavedPosts?: boolean;
+  type?: 'random' | 'own' | 'saved' | 'group';
 }
 
 export interface CommentQuery {

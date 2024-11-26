@@ -16,16 +16,40 @@ export const createPost = async (request: Request, response: Response) => {
 // get posts
 export const getPosts = async (request: Request, response: Response) => {
   try {
-    const { page, limit, ownerEmail, userEmail, groupId, getSavedPosts } = request.query;
-    const result = await postService.getPosts({
-      page: parseInt(page as string, 10) ?? 1,
-      limit: parseInt(limit as string, 10) ?? 10,
-      userEmail: userEmail as string,
-      groupId: groupId as string,
-      ownerEmail: ownerEmail as string,
-      getSavedPosts: getSavedPosts === 'true'
-    });
-    return response.status(200).json(result);
+    const { page, limit, userId, groupId, type } = request.query;
+    switch (type) {
+      case 'own': {
+        const result = await postService.getOwnPosts({
+          page: parseInt(page as string, 10) ?? 1,
+          limit: parseInt(limit as string, 10) ?? 10,
+          userId: userId as string
+        });
+        return response.status(200).json(result);
+      }
+      case 'saved': {
+        const result = await postService.getSavedPosts({
+          page: parseInt(page as string, 10) ?? 1,
+          limit: parseInt(limit as string, 10) ?? 10,
+          userId: userId as string
+        });
+        return response.status(200).json(result);
+      }
+      case 'group': {
+        const result = await postService.getGroupPosts({
+          page: parseInt(page as string, 10) ?? 1,
+          limit: parseInt(limit as string, 10) ?? 10,
+          groupId: groupId as string
+        });
+        return response.status(200).json(result);
+      }
+      default: {
+        const result = await postService.getRandomPosts({
+          page: parseInt(page as string, 10) ?? 1,
+          limit: parseInt(limit as string, 10) ?? 10
+        });
+        return response.status(200).json(result);
+      }
+    }
   } catch (error) {
     return response.status(400).json({
       message: error.message
@@ -71,25 +95,27 @@ export const getPostById = async (request: Request, response: Response) => {
   }
 };
 
-// like post
-export const likePost = async (request: Request, response: Response) => {
+// actions controller
+export const actionsController = async (request: Request, response: Response) => {
   try {
+    const { action } = request.query;
     const { id } = request.params;
-    const result = await postService.likePost(id, request.body);
-    return response.status(200).json(result);
-  } catch (error) {
-    return response.status(400).json({
-      message: error.message
-    });
-  }
-};
-
-// like post
-export const dislikePost = async (request: Request, response: Response) => {
-  try {
-    const { id } = request.params;
-    const result = await postService.dislikePost(id, request.body);
-    return response.status(200).json(result);
+    const { userId } = request.body;
+    switch (action) {
+      case 'like': {
+        const result = await postService.likePost(id, userId);
+        return response.status(200).json(result);
+      }
+      case 'dislike': {
+        const result = await postService.dislikePost(id, userId);
+        return response.status(200).json(result);
+      }
+      default: {
+        return response.status(400).json({
+          message: 'Invalid action'
+        });
+      }
+    }
   } catch (error) {
     return response.status(400).json({
       message: error.message

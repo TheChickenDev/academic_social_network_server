@@ -25,27 +25,26 @@ export const replyComment = async (request: Request, response: Response) => {
   }
 };
 
-// like comment
-export const likeComment = async (request: Request, response: Response) => {
+// actions controller
+export const actionsController = async (request: Request, response: Response) => {
   try {
+    const { action } = request.query;
     const { id } = request.params;
-    const { commentId, ...actionInfo } = request.body;
-    const result = await commentService.likeComment(id, commentId, actionInfo);
-    return response.status(200).json(result);
-  } catch (error) {
-    return response.status(404).json({
-      message: error.message
-    });
-  }
-};
-
-// dislike comment
-export const dislikeComment = async (request: Request, response: Response) => {
-  try {
-    const { id } = request.params;
-    const { commentId, ...actionInfo } = request.body;
-    const result = await commentService.dislikeComment(id, commentId, actionInfo);
-    return response.status(200).json(result);
+    const { userId } = request.body;
+    switch (action) {
+      case 'like': {
+        const result = await commentService.likeComment(id, userId);
+        return response.status(200).json(result);
+      }
+      case 'dislike': {
+        const result = await commentService.dislikeComment(id, userId);
+        return response.status(200).json(result);
+      }
+      default:
+        return response.status(400).json({
+          message: 'Invalid action!'
+        });
+    }
   } catch (error) {
     return response.status(404).json({
       message: error.message

@@ -9,10 +9,10 @@ import { User } from '../interfaces/user.interface';
 import { Group } from '../interfaces/group.interface';
 import RankModel from '../models/rank.model';
 
-export const updateUserRank = (additionalPoints: number, email: string) => {
+export const updateUserRank = (additionalPoints: number, userId: string) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user = await UserModel.findOne({ email });
+      const user = await UserModel.findById(userId);
       if (user) {
         const rank = await RankModel.findOne({ point: { $lte: user.points + additionalPoints } }).sort({ point: -1 });
         user.rank = rank?.name ? rank.name : '';

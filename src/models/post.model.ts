@@ -1,120 +1,33 @@
 import mongoose, { Schema } from 'mongoose';
-import { Post, Comment, Tag, Reply, ActionInfo } from '../interfaces/post.interface';
+import { Post, Comment } from '../interfaces/post.interface';
 
 export const commentSchema: Schema<Comment> = new Schema(
   {
     postId: { type: String, required: true },
-    ownerName: { type: String, required: true },
-    ownerAvatar: { type: String, required: true },
-    ownerEmail: { type: String, required: true },
+    ownerId: { type: String, required: true },
+    parentId: { type: String, required: false, default: '' },
     content: { type: Schema.Types.Mixed, required: true },
     numberOfLikes: { type: Number, required: true, default: 0 },
-    likes: [
-      new Schema<ActionInfo>(
-        {
-          ownerName: { type: String, required: true },
-          ownerEmail: { type: String, required: true }
-        },
-        {
-          _id: false
-        }
-      )
-    ],
+    likedBy: { type: [String], required: false, default: [] },
     numberOfDislikes: { type: Number, required: true, default: 0 },
-    dislikes: [
-      new Schema<ActionInfo>(
-        {
-          ownerName: { type: String, required: true },
-          ownerEmail: { type: String, required: true }
-        },
-        {
-          _id: false
-        }
-      )
-    ],
+    dislikedBy: { type: [String], required: false, default: [] },
     numberOfRyplies: { type: Number, required: true, default: 0 },
-    replies: [
-      new Schema<Reply>(
-        {
-          postId: { type: String, required: true },
-          commentId: { type: String, required: true },
-          ownerName: { type: String, required: true },
-          ownerAvatar: { type: String, required: true },
-          ownerEmail: { type: String, required: true },
-          content: { type: Schema.Types.Mixed, required: true },
-          numberOfLikes: { type: Number, required: true, default: 0 },
-          likes: [
-            new Schema<ActionInfo>(
-              {
-                ownerName: { type: String, required: true },
-                ownerEmail: { type: String, required: true }
-              },
-              {
-                _id: false
-              }
-            )
-          ],
-          numberOfDislikes: { type: Number, required: true, default: 0 },
-          dislikes: [
-            new Schema<ActionInfo>(
-              {
-                ownerName: { type: String, required: true },
-                ownerEmail: { type: String, required: true }
-              },
-              {
-                _id: false
-              }
-            )
-          ]
-        },
-        { timestamps: true }
-      )
-    ]
+    replies: [{ type: Schema.Types.ObjectId, ref: 'Comment', required: false, default: [] }]
   },
   { timestamps: true }
-);
-
-export const tagSchema: Schema<Tag> = new Schema(
-  {
-    label: { type: String, required: true },
-    value: { type: String, required: true }
-  },
-  { _id: false }
 );
 
 const postSchema: Schema<Post> = new Schema(
   {
     title: { type: String, required: true },
-    tags: { type: [tagSchema], required: false, default: [] },
-    ownerName: { type: String, required: false, default: '' },
-    ownerAvatar: { type: String, required: false, default: '' },
-    ownerEmail: { type: String, required: true },
+    tags: { type: [String], required: true, default: [] },
+    ownerId: { type: String, required: true, default: '' },
     groupId: { type: String, required: false, default: '' },
     content: { type: Schema.Types.Mixed, required: true },
     numberOfLikes: { type: Number, required: true, default: 0 },
-    likes: [
-      new Schema<ActionInfo>(
-        {
-          ownerName: { type: String, required: true },
-          ownerEmail: { type: String, required: true }
-        },
-        {
-          _id: false
-        }
-      )
-    ],
-    dislikes: [
-      new Schema<ActionInfo>(
-        {
-          ownerName: { type: String, required: true },
-          ownerEmail: { type: String, required: true }
-        },
-        {
-          _id: false
-        }
-      )
-    ],
+    likedBy: { type: [String], required: false, default: [] },
     numberOfDislikes: { type: Number, required: true, default: 0 },
+    dislikedBy: { type: [String], required: false, default: [] },
     numberOfComments: { type: Number, required: true, default: 0 }
   },
   { timestamps: true }

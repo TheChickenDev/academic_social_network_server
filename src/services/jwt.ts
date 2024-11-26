@@ -38,12 +38,13 @@ export const refreshTokenService = (token: string) => {
           });
         }
         const access_token = await generateAccessToken({
+          _id: user?._id,
           email: user?.email,
           isAdmin: user?.isAdmin,
           fullName: user?.fullName,
           avatar: user?.avatar
         });
-        UserModel.findOne({ email: user?.email }).then((res: User) => {
+        UserModel.findById(user._id).then((res: User) => {
           res.accessToken = access_token;
           res.save();
         });

@@ -1,8 +1,9 @@
-import { ActionInfo, Comment, CommentQuery, Reply } from '../interfaces/post.interface';
+import { Comment, CommentQuery } from '../interfaces/post.interface';
 import PostModel, { CommentModel } from '../models/post.model';
 import { Document } from 'mongoose';
 import { updateUserRank } from './utils.service';
 import { COMMENT_POINT } from '../constants/point';
+import UserModel from '../models/user.model';
 
 // comment
 const comment = (commentData: Comment) => {
@@ -15,8 +16,8 @@ const comment = (commentData: Comment) => {
       const newComment = await CommentModel.create(commentData);
       post.numberOfComments += 1;
       post.save();
-      updateUserRank(COMMENT_POINT, commentData.ownerEmail);
-      updateUserRank(COMMENT_POINT, post.ownerEmail);
+      updateUserRank(COMMENT_POINT, commentData.ownerId);
+      updateUserRank(COMMENT_POINT, post.ownerId);
       resolve({
         message: 'Comment successful!',
         data: newComment
@@ -28,28 +29,25 @@ const comment = (commentData: Comment) => {
 };
 
 // reply
-const replyComment = (replyData: Reply) => {
+const replyComment = (replyData: Comment) => {
   return new Promise(async (resolve, reject) => {
     try {
       const post = await PostModel.findById(replyData.postId);
       if (!post) {
         return reject({ message: 'Post not found!' });
       }
-      const comment = await CommentModel.findById(replyData.commentId);
+      const comment = await CommentModel.findById(replyData.parentId);
       if (!comment) {
         return reject({ message: 'Comment not found!' });
       }
-      const newReply = {
-        ...replyData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      const newReply = await CommentModel.create(replyData);
+      await newReply.save();
       comment.replies.push(newReply);
-      comment.save();
+      await comment.save();
       post.numberOfComments += 1;
-      post.save();
-      updateUserRank(COMMENT_POINT, replyData.ownerEmail);
-      updateUserRank(COMMENT_POINT, post.ownerEmail);
+      await post.save();
+      updateUserRank(COMMENT_POINT, replyData.ownerId);
+      updateUserRank(COMMENT_POINT, post.ownerId);
       resolve({
         message: 'Comment successful!',
         data: newReply
@@ -61,7 +59,7 @@ const replyComment = (replyData: Reply) => {
 };
 
 // like comment
-const likeComment = (commentId: string, parentId: string, actionInfo: ActionInfo) => {
+const likeComment = (commentId: string, userId: string) => {
   return new Promise(async (resolve, reject) => {
     try {
       let comment: Document<unknown, {}, Comment> &
@@ -69,65 +67,57 @@ const likeComment = (commentId: string, parentId: string, actionInfo: ActionInfo
         Required<{
           _id: string;
         }> = null;
-      if (parentId) {
-        comment = await CommentModel.findById(parentId);
-        if (!comment) {
-          return reject({ message: 'Comment not found!' });
-        }
-        let existLikeIndex = -1;
-        let newReply = null;
-        comment.replies.forEach((reply) => {
-          if (reply._id.toString() === commentId) {
-            const existDislikeIndex = reply.dislikes.findIndex(
-              (dislike) => dislike.ownerEmail === actionInfo.ownerEmail
-            );
-            if (existDislikeIndex !== -1) {
-              return reject({ message: 'You have already disliked this comment!' });
-            }
-            const existLikeIndex = reply.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
-            if (existLikeIndex !== -1) {
-              reply.likes.splice(existLikeIndex, 1);
-              reply.numberOfLikes = reply.likes.length;
-            } else {
-              reply.likes.push(actionInfo);
-              reply.numberOfLikes = reply.likes.length;
-            }
-            newReply = reply;
+
+      comment = await CommentModel.findById(commentId);
+
+      if (!comment) {
+        return reject({ message: 'Comment not found!' });
+      }
+      const existDislikeIndex = comment.dislikedBy.findIndex((id) => id === userId);
+      if (existDislikeIndex !== -1) {
+        return reject({ message: 'You have already disliked this comment!' });
+      }
+      const existLikeIndex = comment.likedBy.findIndex((id) => id === userId);
+      if (existLikeIndex !== -1) {
+        comment.likedBy.splice(existLikeIndex, 1);
+        comment.numberOfLikes = comment.likedBy.length;
+        comment.save();
+        const likedBy = await Promise.all(
+          comment.likedBy.map(async (id) => {
+            const likedInfo = await UserModel.findById(id).select('_id fullName');
+            return {
+              userId: likedInfo._id,
+              userName: likedInfo.fullName
+            };
+          })
+        );
+        return resolve({
+          message: 'Comment unliked!',
+          data: {
+            numberOfLikes: comment.numberOfLikes,
+            likedBy
           }
         });
-        comment.save();
-        resolve({
-          message: existLikeIndex !== -1 ? 'Comment unliked!' : 'Comment liked!',
-          data: newReply
-        });
-      } else {
-        comment = await CommentModel.findById(commentId);
-
-        if (!comment) {
-          return reject({ message: 'Comment not found!' });
-        }
-        const existDislikeIndex = comment.dislikes.findIndex((dislike) => dislike.ownerEmail === actionInfo.ownerEmail);
-        if (existDislikeIndex !== -1) {
-          return reject({ message: 'You have already disliked this comment!' });
-        }
-        const existLikeIndex = comment.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
-        if (existLikeIndex !== -1) {
-          comment.likes.splice(existLikeIndex, 1);
-          comment.numberOfLikes = comment.likes.length;
-          comment.save();
-          return resolve({
-            message: 'Comment unliked!',
-            data: comment
-          });
-        }
-        comment.likes.push(actionInfo);
-        comment.numberOfLikes = comment.likes.length;
-        comment.save();
-        resolve({
-          message: 'Comment liked!',
-          data: comment
-        });
       }
+      comment.likedBy.push(userId);
+      comment.numberOfLikes = comment.likedBy.length;
+      comment.save();
+      const likedBy = await Promise.all(
+        comment.likedBy.map(async (id) => {
+          const likedInfo = await UserModel.findById(id).select('_id fullName');
+          return {
+            userId: likedInfo._id,
+            userName: likedInfo.fullName
+          };
+        })
+      );
+      resolve({
+        message: 'Comment liked!',
+        data: {
+          numberOfLikes: comment.numberOfLikes,
+          likedBy
+        }
+      });
     } catch (error) {
       reject(error);
     }
@@ -135,7 +125,7 @@ const likeComment = (commentId: string, parentId: string, actionInfo: ActionInfo
 };
 
 // dislike comment
-const dislikeComment = (commentId: string, parentId: string, actionInfo: ActionInfo) => {
+const dislikeComment = (commentId: string, userId: string) => {
   return new Promise(async (resolve, reject) => {
     try {
       let comment: Document<unknown, {}, Comment> &
@@ -143,65 +133,57 @@ const dislikeComment = (commentId: string, parentId: string, actionInfo: ActionI
         Required<{
           _id: string;
         }> = null;
-      if (parentId) {
-        comment = await CommentModel.findById(parentId);
-        if (!comment) {
-          return reject({ message: 'Comment not found!' });
-        }
-        let existDislikeIndex = -1;
-        let newReply = null;
-        comment.replies.forEach((reply) => {
-          if (reply._id.toString() === commentId) {
-            const existLikeIndex = reply.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
-            if (existLikeIndex !== -1) {
-              return reject({ message: 'You have already liked this comment!' });
-            }
-            const existDislikeIndex = reply.dislikes.findIndex(
-              (dislike) => dislike.ownerEmail === actionInfo.ownerEmail
-            );
-            if (existDislikeIndex !== -1) {
-              reply.dislikes.splice(existDislikeIndex, 1);
-              reply.numberOfDislikes = reply.dislikes.length;
-            } else {
-              reply.dislikes.push(actionInfo);
-              reply.numberOfDislikes = reply.dislikes.length;
-            }
-            newReply = reply;
+
+      comment = await CommentModel.findById(commentId);
+
+      if (!comment) {
+        return reject({ message: 'Comment not found!' });
+      }
+      const existLikeIndex = comment.likedBy.findIndex((id) => id === userId);
+      if (existLikeIndex !== -1) {
+        return reject({ message: 'You have already liked this comment!' });
+      }
+      const existDislikeIndex = comment.dislikedBy.findIndex((id) => id === userId);
+      if (existDislikeIndex !== -1) {
+        comment.dislikedBy.splice(existDislikeIndex, 1);
+        comment.numberOfDislikes = comment.dislikedBy.length;
+        comment.save();
+        const dislikedBy = await Promise.all(
+          comment.dislikedBy.map(async (id) => {
+            const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+            return {
+              userId: dislikedInfo._id,
+              userName: dislikedInfo.fullName
+            };
+          })
+        );
+        return resolve({
+          message: 'Comment unliked!',
+          data: {
+            numberOfDislikes: comment.numberOfDislikes,
+            dislikedBy
           }
         });
-        comment.save();
-        resolve({
-          message: existDislikeIndex !== -1 ? 'Comment unliked!' : 'Comment liked!',
-          data: newReply
-        });
-      } else {
-        comment = await CommentModel.findById(commentId);
-
-        if (!comment) {
-          return reject({ message: 'Comment not found!' });
-        }
-        const existLikeIndex = comment.likes.findIndex((like) => like.ownerEmail === actionInfo.ownerEmail);
-        if (existLikeIndex !== -1) {
-          return reject({ message: 'You have already liked this comment!' });
-        }
-        const existDislikeIndex = comment.dislikes.findIndex((dislike) => dislike.ownerEmail === actionInfo.ownerEmail);
-        if (existDislikeIndex !== -1) {
-          comment.dislikes.splice(existDislikeIndex, 1);
-          comment.numberOfDislikes = comment.dislikes.length;
-          comment.save();
-          return resolve({
-            message: 'Comment unliked!',
-            data: comment
-          });
-        }
-        comment.dislikes.push(actionInfo);
-        comment.numberOfDislikes = comment.dislikes.length;
-        comment.save();
-        resolve({
-          message: 'Comment liked!',
-          data: comment
-        });
       }
+      comment.dislikedBy.push(userId);
+      comment.numberOfDislikes = comment.dislikedBy.length;
+      comment.save();
+      const dislikedBy = await Promise.all(
+        comment.dislikedBy.map(async (id) => {
+          const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+          return {
+            userId: dislikedInfo._id,
+            userName: dislikedInfo.fullName
+          };
+        })
+      );
+      resolve({
+        message: 'Comment liked!',
+        data: {
+          numberOfDislikes: comment.numberOfDislikes,
+          dislikedBy
+        }
+      });
     } catch (error) {
       reject(error);
     }
@@ -213,16 +195,72 @@ const getCommentsByPostId = (query: CommentQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
       const skip = (query.page - 1) * query.limit;
-      const comments = await CommentModel.find({ postId: query.postId })
+      const comments = await CommentModel.find({ postId: query.postId, parentId: '' })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(query.limit);
       if (!comments) {
         return reject({ message: 'Comments not found!' });
       }
+      const result = await Promise.all(
+        comments.map(async (comment) => {
+          const replies = await CommentModel.find({ parentId: comment._id });
+          const likedBy = await Promise.all(
+            comment.likedBy.map(async (id) => {
+              const likedInfo = await UserModel.findById(id).select('_id fullName');
+              return {
+                userId: likedInfo._id,
+                userName: likedInfo.fullName
+              };
+            })
+          );
+          const dislikedBy = await Promise.all(
+            comment.dislikedBy.map(async (id) => {
+              const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+              return {
+                userId: dislikedInfo._id,
+                userName: dislikedInfo.fullName
+              };
+            })
+          );
+          const handledReplies = await Promise.all(
+            replies.map(async (reply) => {
+              const likedBy = await Promise.all(
+                reply.likedBy.map(async (id) => {
+                  const likedInfo = await UserModel.findById(id).select('_id fullName');
+                  return {
+                    userId: likedInfo._id,
+                    userName: likedInfo.fullName
+                  };
+                })
+              );
+              const dislikedBy = await Promise.all(
+                reply.dislikedBy.map(async (id) => {
+                  const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+                  return {
+                    userId: dislikedInfo._id,
+                    userName: dislikedInfo.fullName
+                  };
+                })
+              );
+              return {
+                ...reply.toObject(),
+                likedBy,
+                dislikedBy
+              };
+            })
+          );
+          return {
+            ...comment.toObject(),
+            replies: handledReplies,
+            likedBy,
+            dislikedBy
+          };
+        })
+      );
       resolve({
         message: 'Comments found!',
-        data: comments
+        data: result
       });
     } catch (error) {
       reject(error);

@@ -1,11 +1,10 @@
 import express from 'express';
 import {
+  actionsController,
   createPost,
   deletePost,
-  dislikePost,
   getPostById,
   getPosts,
-  likePost,
   updatePost
 } from '../controllers/post.controller';
 import { authUserMiddleware } from '../middlewares/auth';
@@ -16,7 +15,6 @@ router.get('/', getPosts);
 router.patch('/', updatePost);
 router.delete('/:id', deletePost);
 router.get('/:id', getPostById);
-router.post('/:id/like', authUserMiddleware, likePost);
-router.post('/:id/dislike', authUserMiddleware, dislikePost);
+router.post('/:id', authUserMiddleware, actionsController);
 
 export default router;
