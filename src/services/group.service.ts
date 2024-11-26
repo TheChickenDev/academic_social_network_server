@@ -8,7 +8,7 @@ import { Post } from '../interfaces/post.interface';
 // create group
 
 const createGroup = (data: {
-  ownerEmail: string;
+  ownerId: string;
   name: string;
   description: string;
   cloudinaryUrls: string[];
@@ -16,7 +16,7 @@ const createGroup = (data: {
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email: data.ownerEmail });
+      const user: User = await UserModel.findOne({ email: data.ownerId });
       if (!user) {
         reject({
           message: 'User not found!'
@@ -27,11 +27,11 @@ const createGroup = (data: {
         description: string;
         avatarImg?: object;
         backgroundImg?: object;
-        ownerEmail: string;
+        ownerId: string;
       } = {
         name: data.name,
         description: data.description,
-        ownerEmail: user.email
+        ownerId: user.email
       };
       if (data.cloudinaryUrls && data.cloudinaryUrls[0]) {
         newGroupData = { ...newGroupData, avatarImg: { url: data.cloudinaryUrls[0], publicId: data.publicIds[0] } };
@@ -53,7 +53,7 @@ const createGroup = (data: {
 
 // get group
 
-const getGroups = ({ id, ownerEmail, userEmail, memberEmail, getList, page, limit }: GroupQuery) => {
+const getGroups = ({ id, ownerId, userId, memberEmail, getList, page, limit }: GroupQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
       if (id) {
@@ -64,31 +64,27 @@ const getGroups = ({ id, ownerEmail, userEmail, memberEmail, getList, page, limi
           });
         }
 
-        const owner = await UserModel.findOne({ email: group.ownerEmail });
+        const owner = await UserModel.findOne({ email: group.ownerId });
         const groupObject = group.toObject();
         const moderators = group.members?.filter((member) => member.role === 'moderator');
-        const moderatorsData = await UserModel.find({ email: { $in: moderators.map((mode) => mode.userEmail) } }).limit(
+        const moderatorsData = await UserModel.find({ email: { $in: moderators.map((mode) => mode.userId) } }).limit(
           10
         );
         const members = group.members?.filter((member) => member.role === 'member');
-        const membersData = await UserModel.find({ email: { $in: members.map((member) => member.userEmail) } })
+        const membersData = await UserModel.find({ email: { $in: members.map((member) => member.userId) } })
           .sort({ join: -1 })
           .skip(0)
           .limit(20);
 
         const canJoin =
-          !userEmail ||
-          group.ownerEmail === userEmail ||
-          group.members?.some((member) => member.userEmail === userEmail)
+          !userId || group.ownerId === userId || group.members?.some((member) => member.userId === userId)
             ? false
             : true;
         const canPost =
-          group.ownerEmail === userEmail || group.members?.some((member) => member.userEmail === userEmail)
-            ? true
-            : false;
+          group.ownerId === userId || group.members?.some((member) => member.userId === userId) ? true : false;
         const canEdit =
-          group.ownerEmail === userEmail ||
-          group.members?.some((member) => member.userEmail === userEmail && member.role === 'moderator');
+          group.ownerId === userId ||
+          group.members?.some((member) => member.userId === userId && member.role === 'moderator');
         return resolve({
           message: 'Get group successful!',
           data: {
@@ -102,7 +98,7 @@ const getGroups = ({ id, ownerEmail, userEmail, memberEmail, getList, page, limi
             members: membersData.map((member) => {
               const memberObject = member.toObject();
               return {
-                userEmail: memberObject?.email,
+                userId: memberObject?.email,
                 userName: memberObject?.fullName,
                 userAvatar: memberObject?.avatarImg?.url ?? null,
                 userRank: memberObject?.rank
@@ -111,7 +107,7 @@ const getGroups = ({ id, ownerEmail, userEmail, memberEmail, getList, page, limi
             moderators: moderatorsData.map((moderator) => {
               const moderatorObject = moderator.toObject();
               return {
-                userEmail: moderatorObject?.email,
+                userId: moderatorObject?.email,
                 userName: moderatorObject?.fullName,
                 userAvatar: moderatorObject?.avatarImg?.url ?? null,
                 userRank: moderatorObject?.rank
@@ -122,8 +118,8 @@ const getGroups = ({ id, ownerEmail, userEmail, memberEmail, getList, page, limi
             canEdit
           }
         });
-      } else if (ownerEmail) {
-        const groups = await GroupModel.find({ ownerEmail });
+      } else if (ownerId) {
+        const groups = await GroupModel.find({ ownerId });
         if (!groups) {
           return reject({
             message: 'Group not found!'
@@ -143,7 +139,7 @@ const getGroups = ({ id, ownerEmail, userEmail, memberEmail, getList, page, limi
         });
       } else if (getList) {
         if (memberEmail) {
-          const groups = await GroupModel.find({ 'members.userEmail': memberEmail });
+          const groups = await GroupModel.find({ 'members.userId': memberEmail });
           if (!groups) {
             return reject({
               message: 'Group not found!'
@@ -161,11 +157,11 @@ const getGroups = ({ id, ownerEmail, userEmail, memberEmail, getList, page, limi
               };
             })
           });
-        } else if (userEmail) {
+        } else if (userId) {
           const skip = (page - 1) * limit;
           const groups = await GroupModel.find({
-            ownerEmail: { $ne: userEmail },
-            'members.userEmail': { $nin: [userEmail] }
+            ownerId: { $ne: userId },
+            'members.userId': { $nin: [userId] }
           })
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -247,7 +243,7 @@ const updateGroup = (data: {
 
 // get members
 
-const getMembers = ({ id, memberRole, userEmail }: GroupQuery) => {
+const getMembers = ({ id, memberRole, userId }: GroupQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
       const group = await GroupModel.findById(id);
@@ -262,26 +258,26 @@ const getMembers = ({ id, memberRole, userEmail }: GroupQuery) => {
       } else {
         members = group.members?.filter((member) => member.role === memberRole);
       }
-      const membersData = await UserModel.find({ email: { $in: members.map((member) => member.userEmail) } });
+      const membersData = await UserModel.find({ email: { $in: members.map((member) => member.userId) } });
       return resolve({
         message: 'Get members successful!',
         data: membersData.map((member) => {
           const memberObject = member.toObject();
-          const temp = members.find((mem) => mem.userEmail === memberObject.email);
-          if (userEmail && memberObject.email !== userEmail) {
+          const temp = members.find((mem) => mem.userId === memberObject.email);
+          if (userId && memberObject.email !== userId) {
             return {
               role: temp?.role,
-              userEmail: memberObject?.email,
+              userId: memberObject?.email,
               userName: memberObject?.fullName,
               userAvatar: memberObject?.avatarImg?.url,
               userRank: memberObject?.rank,
-              canAddFriend: memberObject.friends?.some((friend) => friend.friendEmail === userEmail) ? false : true,
+              canAddFriend: memberObject.friends?.some((friend) => friend.friendId === userId) ? false : true,
               joinDate: temp?.joinDate
             };
           }
           return {
             role: temp?.role,
-            userEmail: memberObject?.email,
+            userId: memberObject?.email,
             userName: memberObject?.fullName,
             userAvatar: memberObject?.avatarImg?.url,
             userRank: memberObject?.rank,
@@ -298,7 +294,7 @@ const getMembers = ({ id, memberRole, userEmail }: GroupQuery) => {
 
 // requestToJoin
 
-const requestToJoin = ({ id, userEmail }: { id: string; userEmail: string }) => {
+const requestToJoin = ({ id, userId }: { id: string; userId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
       const group = await GroupModel.findById(id);
@@ -307,20 +303,20 @@ const requestToJoin = ({ id, userEmail }: { id: string; userEmail: string }) => 
           message: 'Group not found!'
         });
       }
-      if (group.members?.some((member) => member.userEmail === userEmail)) {
+      if (group.members?.some((member) => member.userId === userId)) {
         return reject({
           message: 'You are already a member of this group!'
         });
       }
       if (group.isPrivate) {
         group.members?.push({
-          userEmail,
+          userId,
           role: 'pending',
           joinDate: new Date()
         });
       } else {
         group.members?.push({
-          userEmail,
+          userId,
           role: 'member',
           joinDate: new Date()
         });
@@ -337,7 +333,7 @@ const requestToJoin = ({ id, userEmail }: { id: string; userEmail: string }) => 
 
 // accept request
 
-const acceptJoinRequest = ({ id, userEmail }: { id: string; userEmail: string }) => {
+const acceptJoinRequest = ({ id, userId }: { id: string; userId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
       const group = await GroupModel.findById(id);
@@ -346,7 +342,7 @@ const acceptJoinRequest = ({ id, userEmail }: { id: string; userEmail: string })
           message: 'Group not found!'
         });
       }
-      const member = group.members?.find((member) => member.userEmail === userEmail);
+      const member = group.members?.find((member) => member.userId === userId);
       if (!member) {
         return reject({
           message: 'Member not found!'
@@ -367,7 +363,7 @@ const acceptJoinRequest = ({ id, userEmail }: { id: string; userEmail: string })
 
 // remove member
 
-const removeMember = ({ id, userEmail }: { id: string; userEmail: string }) => {
+const removeMember = ({ id, userId }: { id: string; userId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
       const group = await GroupModel.findById(id);
@@ -376,7 +372,7 @@ const removeMember = ({ id, userEmail }: { id: string; userEmail: string }) => {
           message: 'Group not found!'
         });
       }
-      const memberIndex = group.members?.findIndex((member) => member.userEmail === userEmail);
+      const memberIndex = group.members?.findIndex((member) => member.userId === userId);
       if (memberIndex === -1) {
         return reject({
           message: 'Member not found!'
@@ -395,7 +391,7 @@ const removeMember = ({ id, userEmail }: { id: string; userEmail: string }) => {
 
 // appoint moderator
 
-const appointModerator = ({ id, userEmail }: { id: string; userEmail: string }) => {
+const appointModerator = ({ id, userId }: { id: string; userId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
       const group = await GroupModel.findById(id);
@@ -404,7 +400,7 @@ const appointModerator = ({ id, userEmail }: { id: string; userEmail: string }) 
           message: 'Group not found!'
         });
       }
-      const member = group.members?.find((member) => member.userEmail === userEmail);
+      const member = group.members?.find((member) => member.userId === userId);
       if (!member) {
         return reject({
           message: 'Member not found!'
@@ -424,7 +420,7 @@ const appointModerator = ({ id, userEmail }: { id: string; userEmail: string }) 
 
 // dismissal moderator
 
-const dismissalModerator = ({ id, userEmail }: { id: string; userEmail: string }) => {
+const dismissalModerator = ({ id, userId }: { id: string; userId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
       const group = await GroupModel.findById(id);
@@ -433,7 +429,7 @@ const dismissalModerator = ({ id, userEmail }: { id: string; userEmail: string }
           message: 'Group not found!'
         });
       }
-      const member = group.members?.find((member) => member.userEmail === userEmail);
+      const member = group.members?.find((member) => member.userId === userId);
       if (!member) {
         return reject({
           message: 'Member not found!'
@@ -477,7 +473,7 @@ const getPosts = ({ id, postStatus }: GroupQuery) => {
             _id: post._id,
             title: post.title,
             ownerName: user.fullName,
-            ownerEmail: user.email,
+            ownerId: user.email,
             createdAt: post.createdAt
           };
         })

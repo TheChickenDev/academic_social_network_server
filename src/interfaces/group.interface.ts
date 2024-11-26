@@ -3,7 +3,7 @@ import { ImageData } from './utils.interface';
 
 // group member
 export interface GroupMember {
-  userEmail: string;
+  userId: string;
   role: 'pending' | 'member' | 'moderator' | 'admin';
   joinDate: Date;
 }
@@ -23,7 +23,7 @@ export interface Group extends Document {
   avatarImg: ImageData;
   backgroundImg: ImageData;
   isPrivate: boolean;
-  ownerEmail: string;
+  ownerId: string;
   members: GroupMember[];
   posts: GroupPost[];
   createdAt: Date;
@@ -33,8 +33,8 @@ export interface Group extends Document {
 // group post
 export interface GroupQuery {
   id?: string;
-  ownerEmail?: string;
-  userEmail?: string;
+  ownerId?: string;
+  userId?: string;
   memberEmail?: string;
   getList?: boolean;
   page?: number;

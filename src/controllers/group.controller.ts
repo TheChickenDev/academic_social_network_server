@@ -23,11 +23,11 @@ export const createGroup = async (request: Request, response: Response) => {
 
 export const getGroups = async (request: Request, response: Response) => {
   try {
-    const { id, ownerEmail, userEmail, memberEmail, getList, page, limit } = request.query;
+    const { id, ownerId, userId, memberEmail, getList, page, limit } = request.query;
     const result = await groupService.getGroups({
       id: id as string,
-      ownerEmail: ownerEmail as string,
-      userEmail: userEmail as string,
+      ownerId: ownerId as string,
+      userId: userId as string,
       memberEmail: memberEmail as string,
       getList: getList === 'true',
       page: page ? parseInt(page as string, 10) : 1,
@@ -58,11 +58,11 @@ export const updateGroup = async (request: Request, response: Response) => {
 
 export const getMembers = async (request: Request, response: Response) => {
   try {
-    const { id, memberRole, userEmail } = request.query;
+    const { id, memberRole, userId } = request.query;
     const result = await groupService.getMembers({
       id: id as string,
       memberRole: (memberRole as 'pending' | 'member' | 'moderator' | 'admin') ?? 'all',
-      userEmail: userEmail as string
+      userId: userId as string
     });
     return response.status(200).json(result);
   } catch (error) {

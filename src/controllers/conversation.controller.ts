@@ -5,9 +5,9 @@ import conversationService from '../services/conversation.service';
 
 export const getConversations = async (request: Request, response: Response) => {
   try {
-    const { userEmail, page, limit } = request.query;
+    const { _id, page, limit } = request.query;
     const result = await conversationService.getConversations({
-      userEmail: userEmail as string,
+      userId: _id as string,
       page: parseInt(page as string, 10) ?? 1,
       limit: parseInt(limit as string, 10) ?? 10
     });

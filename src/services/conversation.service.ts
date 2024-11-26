@@ -6,25 +6,25 @@ import MessageModel from '../models/message.model';
 
 // get conversations
 
-const getConversations = async ({ userEmail, page, limit }: { userEmail: string; page: number; limit: number }) => {
+const getConversations = async ({ userId, page, limit }: { userId: string; page: number; limit: number }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email: userEmail });
+      const user: User = await UserModel.findById(userId);
       if (!user) {
         reject({
           message: 'User not found!'
         });
       }
       const friends = await UserModel.find({
-        email: { $in: user.friends.filter((f) => f.status === 'accepted').map((f) => f.friendEmail) }
+        email: { $in: user.friends.filter((f) => f.status === 'accepted').map((f) => f.friendId) }
       }).select('email fullName rank avatarImg');
 
       const conversations = await ConversationModel.find({
-        userEmails: { $elemMatch: { $eq: userEmail } }
+        userIds: { $elemMatch: { $eq: userId } }
       }).sort({ updatedAt: -1 });
       const result = await Promise.all(
         friends.map(async (f) => {
-          const existConversation = conversations.find((c: Conversation) => c.userEmails.includes(f.email));
+          const existConversation = conversations.find((c: Conversation) => c.userIds.includes(f._id.toString()));
           if (existConversation) {
             const lastMessage = await MessageModel.findOne({ conversationId: existConversation._id }).sort({
               createdAt: -1

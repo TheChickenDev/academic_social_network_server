@@ -115,7 +115,7 @@ const userSchema: Schema<User> = new mongoose.Schema(
     friends: [
       new Schema(
         {
-          friendEmail: { type: String, required: true },
+          friendId: { type: String, required: true },
           status: { type: String, enum: ['requested', 'pending', 'accepted', 'blocked'], required: true }
         },
         { _id: false }

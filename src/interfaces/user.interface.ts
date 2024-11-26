@@ -39,7 +39,7 @@ export interface Introduction {
 // friend
 
 export interface Friend {
-  friendEmail: string;
+  friendId: string;
   status: 'requested' | 'pending' | 'accepted' | 'blocked';
   createdAt?: Date;
   updatedAt?: Date;
@@ -93,7 +93,7 @@ export interface CreateUserInput {
 }
 
 export interface UpdateUserInput {
-  email: string;
+  userId: string;
   fullName: string;
   dateOfBirth: Date;
   gender: 'Male' | 'Female' | 'Other' | '';
@@ -104,8 +104,7 @@ export interface UpdateUserInput {
 }
 
 export interface UserQuery {
-  email: string;
-  _id?: string;
+  userId?: string;
   page?: number;
   limit?: number;
 }

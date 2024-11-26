@@ -3,7 +3,7 @@ import { Conversation } from '../interfaces/conversation.interface';
 
 const conversationSchema: Schema<Conversation> = new Schema(
   {
-    userEmails: {
+    userIds: {
       type: [String],
       required: true
     }

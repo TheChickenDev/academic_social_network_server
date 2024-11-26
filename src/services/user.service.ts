@@ -260,7 +260,7 @@ const resetPassword = async ({ token, password }: { token: string; password: str
 const updateUser = (data: UpdateUserInput) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let { email, introduction } = data;
+      let { userId, introduction } = data;
 
       if (introduction) {
         introduction = JSON.parse(introduction as unknown as string);
@@ -268,7 +268,7 @@ const updateUser = (data: UpdateUserInput) => {
 
       if (introduction?.contact?.phone) {
         const user: User = await UserModel.findOne({ 'introduction.contact.phone': introduction.contact.phone });
-        if (user && user.email !== email) {
+        if (user && user._id.toString() !== userId) {
           return reject({
             message: 'Phone number already exists!'
           });
@@ -297,7 +297,7 @@ const updateUser = (data: UpdateUserInput) => {
         newData = { ...newData, avatarImg: { url: data.cloudinaryUrl, publicId: data.publicId } };
       }
 
-      const user: User = await UserModel.findOneAndUpdate({ email }, newData, { new: true });
+      const user: User = await UserModel.findByIdAndUpdate(userId, newData, { new: true });
 
       if (!user) {
         return reject({
@@ -327,16 +327,16 @@ const updateUser = (data: UpdateUserInput) => {
 };
 
 // get user
-const getUser = ({ email, _id }: UserQuery) => {
+const getUser = ({ userId }: UserQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email });
+      const user: User = await UserModel.findById(userId);
       if (!user) {
         return reject({
           message: 'User not found!'
         });
       }
-      const posts = await PostModel.find({ ownerEmail: email });
+      const posts = await PostModel.find({ ownerId: userId });
       resolve({
         message: 'Get user successful!',
         data: {
@@ -367,9 +367,9 @@ const getUsers = (query: UserQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
       const skip = (query?.page - 1) * query?.limit;
-      const user = await UserModel.findOne({ email: query?.email }).select('friends');
-      const exceptEmails = [...(user?.friends.map((f) => f.friendEmail) ?? []), query?.email];
-      const users = await UserModel.find({ email: { $nin: exceptEmails } })
+      const user = await UserModel.findById(query.userId).select('friends');
+      const exceptIds = [...(user?.friends.map((f) => f.friendId) ?? []), query?.userId];
+      const users = await UserModel.find({ _id: { $nin: exceptIds } })
         .select('email fullName points rank avatarImg')
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -391,34 +391,33 @@ const getUsers = (query: UserQuery) => {
 
 // add friend
 
-const addFriend = (data: { email: string; friendEmail: string }) => {
+const addFriend = (data: { _id: string; friendId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email: data.email });
+      const user: User = await UserModel.findById(data._id);
       if (!user) {
         reject({
           message: 'User not found!'
         });
       }
-      const friend: User = await UserModel.findOne({ email: data.friendEmail });
+      const friend: User = await UserModel.findById(data.friendId);
       if (!friend) {
         reject({
           message: 'Friend not found!'
         });
       }
-      const isFriend = user.friends?.find((f) => f.friendEmail === data.friendEmail);
+      const isFriend = user.friends?.find((f) => f.friendId === data.friendId);
       if (isFriend) {
         reject({
           message: 'Friend already exists!'
         });
       }
-      user.friends?.push({ friendEmail: data.friendEmail, status: 'requested' });
-      friend.friends?.push({ friendEmail: data.email, status: 'pending' });
+      user.friends?.push({ friendId: data.friendId, status: 'requested' });
+      friend.friends?.push({ friendId: data._id, status: 'pending' });
       await user.save();
       await friend.save();
       resolve({
-        message: 'Add friend successful!',
-        data: user
+        message: 'Add friend successful!'
       });
     } catch (error) {
       reject(error);
@@ -428,29 +427,29 @@ const addFriend = (data: { email: string; friendEmail: string }) => {
 
 // accept friend
 
-const acceptFriend = (data: { email: string; friendEmail: string }) => {
+const acceptFriend = (data: { _id: string; friendId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email: data.email });
+      const user: User = await UserModel.findById(data._id);
       if (!user) {
         reject({
           message: 'User not found!'
         });
       }
-      const friend: User = await UserModel.findOne({ email: data.friendEmail });
+      const friend: User = await UserModel.findById(data.friendId);
       if (!friend) {
         reject({
           message: 'Friend not found!'
         });
       }
-      const friendIndex = user.friends?.findIndex((f) => f.friendEmail === data.friendEmail);
+      const friendIndex = user.friends?.findIndex((f) => f.friendId === data.friendId);
       if (friendIndex === -1) {
         reject({
           message: 'Friend not found!'
         });
       }
       user.friends[friendIndex].status = 'accepted';
-      const friendIndex2 = friend.friends?.findIndex((f) => f.friendEmail === data.email);
+      const friendIndex2 = friend.friends?.findIndex((f) => f.friendId === data._id);
       if (friendIndex2 === -1) {
         reject({
           message: 'Friend not found!'
@@ -460,8 +459,7 @@ const acceptFriend = (data: { email: string; friendEmail: string }) => {
       await user.save();
       await friend.save();
       resolve({
-        message: 'Accept friend successful!',
-        data: user
+        message: 'Accept friend successful!'
       });
     } catch (error) {
       reject(error);
@@ -471,29 +469,29 @@ const acceptFriend = (data: { email: string; friendEmail: string }) => {
 
 // remove friend
 
-const removeFriend = (data: { email: string; friendEmail: string }) => {
+const removeFriend = (data: { _id: string; friendId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email: data.email });
+      const user: User = await UserModel.findById(data._id);
       if (!user) {
         reject({
           message: 'User not found!'
         });
       }
-      const friend: User = await UserModel.findOne({ email: data.friendEmail });
+      const friend: User = await UserModel.findById(data.friendId);
       if (!friend) {
         reject({
           message: 'Friend not found!'
         });
       }
-      const friendIndex = user.friends?.findIndex((f) => f.friendEmail === data.friendEmail);
+      const friendIndex = user.friends?.findIndex((f) => f.friendId === data.friendId);
       if (friendIndex === -1) {
         reject({
           message: 'Friend not found!'
         });
       }
       user.friends.splice(friendIndex, 1);
-      const friendIndex2 = friend.friends?.findIndex((f) => f.friendEmail === data.email);
+      const friendIndex2 = friend.friends?.findIndex((f) => f.friendId === data._id);
       if (friendIndex2 === -1) {
         reject({
           message: 'Friend not found!'
@@ -503,8 +501,7 @@ const removeFriend = (data: { email: string; friendEmail: string }) => {
       await user.save();
       await friend.save();
       resolve({
-        message: 'Remove friend successful!',
-        data: user
+        message: 'Remove friend successful!'
       });
     } catch (error) {
       reject(error);
@@ -514,18 +511,18 @@ const removeFriend = (data: { email: string; friendEmail: string }) => {
 
 // get friends
 
-const getFriends = (data: { email: string; status: string }) => {
+const getFriends = (data: { _id: string; status: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email: data.email });
+      const user: User = await UserModel.findById(data._id);
       if (!user) {
         reject({
           message: 'User not found!'
         });
       }
       const result = await UserModel.find({
-        email: { $in: user.friends.filter((f) => f.status === data.status).map((f) => f.friendEmail) }
-      }).select('email fullName points rank avatarImg');
+        _id: { $in: user.friends.filter((f) => f.status === data.status).map((f) => f.friendId) }
+      }).select('_id fullName points rank avatarImg');
 
       resolve({
         message: 'Get friends successful!',

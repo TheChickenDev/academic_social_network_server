@@ -99,10 +99,37 @@ const getOwnPosts = (query: PostQuery) => {
       const user = await UserModel.findById(query.userId).select('savedPosts');
       resolve({
         message: 'Posts found!',
-        data: posts.map((post) => ({
-          ...post.toObject(),
-          isSaved: user?.savedPosts?.includes(post._id) ?? false
-        }))
+        data: await Promise.all(
+          posts.map(async (post) => {
+            const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
+            const likedBy = await Promise.all(
+              post.likedBy.map(async (id) => {
+                const likedInfo = await UserModel.findById(id).select('_id fullName');
+                return {
+                  userId: likedInfo?._id,
+                  userName: likedInfo?.fullName
+                };
+              })
+            );
+            const dislikedBy = await Promise.all(
+              post.dislikedBy.map(async (id) => {
+                const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+                return {
+                  userId: dislikedInfo?._id,
+                  userName: dislikedInfo?.fullName
+                };
+              })
+            );
+            return {
+              ...post.toObject(),
+              ownerName: owner?.fullName,
+              ownerAvatar: owner?.avatarImg?.url,
+              likedBy,
+              dislikedBy,
+              isSaved: user?.savedPosts?.includes(post._id) ?? false
+            };
+          })
+        )
       });
     } catch (error) {
       reject(error);
@@ -125,7 +152,37 @@ const getSavedPosts = (query: PostQuery) => {
       }
       resolve({
         message: 'Posts found!',
-        data: posts
+        data: await Promise.all(
+          posts.map(async (post) => {
+            const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
+            const likedBy = await Promise.all(
+              post.likedBy.map(async (id) => {
+                const likedInfo = await UserModel.findById(id).select('_id fullName');
+                return {
+                  userId: likedInfo?._id,
+                  userName: likedInfo?.fullName
+                };
+              })
+            );
+            const dislikedBy = await Promise.all(
+              post.dislikedBy.map(async (id) => {
+                const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+                return {
+                  userId: dislikedInfo?._id,
+                  userName: dislikedInfo?.fullName
+                };
+              })
+            );
+            return {
+              ...post.toObject(),
+              ownerName: owner?.fullName,
+              ownerAvatar: owner?.avatarImg?.url,
+              likedBy,
+              dislikedBy,
+              isSaved: user?.savedPosts?.includes(post._id) ?? false
+            };
+          })
+        )
       });
     } catch (error) {
       reject(error);
@@ -153,10 +210,37 @@ const getGroupPosts = (query: PostQuery) => {
       }
       resolve({
         message: 'Posts found!',
-        data: posts.map((post) => ({
-          ...post.toObject(),
-          isSaved: user?.savedPosts?.includes(post._id) ?? false
-        }))
+        data: await Promise.all(
+          posts.map(async (post) => {
+            const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
+            const likedBy = await Promise.all(
+              post.likedBy.map(async (id) => {
+                const likedInfo = await UserModel.findById(id).select('_id fullName');
+                return {
+                  userId: likedInfo?._id,
+                  userName: likedInfo?.fullName
+                };
+              })
+            );
+            const dislikedBy = await Promise.all(
+              post.dislikedBy.map(async (id) => {
+                const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+                return {
+                  userId: dislikedInfo?._id,
+                  userName: dislikedInfo?.fullName
+                };
+              })
+            );
+            return {
+              ...post.toObject(),
+              ownerName: owner?.fullName,
+              ownerAvatar: owner?.avatarImg?.url,
+              likedBy,
+              dislikedBy,
+              isSaved: user?.savedPosts?.includes(post._id) ?? false
+            };
+          })
+        )
       });
     } catch (error) {
       reject(error);

@@ -5,11 +5,11 @@ import { searchAll, searchGroups, searchPosts, searchUsers } from '../services/u
 
 export const searchController = async (request: Request, response: Response) => {
   try {
-    const { q, type, filter, email, page, limit } = request.query;
+    const { q, type, filter, _id, page, limit } = request.query;
     if (type === 'all') {
       const result = await searchAll({
         q: q as string,
-        email: email as string
+        userId: _id as string
       });
       return response.status(200).json(result);
     } else if (type === 'posts') {
@@ -22,7 +22,7 @@ export const searchController = async (request: Request, response: Response) => 
       return response.status(200).json(result);
     } else if (type === 'users') {
       const result = await searchUsers({
-        email: email as string,
+        userId: _id as string,
         q: q as string,
         filter: filter as string,
         page: parseInt(page as string, 10) ?? 1,
@@ -31,7 +31,7 @@ export const searchController = async (request: Request, response: Response) => 
       return response.status(200).json(result);
     } else if (type === 'groups') {
       const result = await searchGroups({
-        email: email as string,
+        userId: _id as string,
         q: q as string,
         filter: filter as string,
         page: parseInt(page as string, 10) ?? 1,

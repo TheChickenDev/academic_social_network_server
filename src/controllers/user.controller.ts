@@ -110,17 +110,17 @@ export const updateUser = async (request: Request, response: Response) => {
 // get user
 export const getUser = async (request: Request, response: Response) => {
   try {
-    const { email, page, limit } = request.query;
+    const { userId, page, limit } = request.query;
     if (page || limit) {
       const result = await userService.getUsers({
-        email: email as string,
+        userId: userId as string,
         page: parseInt(page as string, 10) ?? 1,
         limit: parseInt(limit as string, 10) ?? 10
       });
       return response.status(200).json(result);
     }
     const result = await userService.getUser({
-      email: email as string
+      userId: userId as string
     });
     return response.status(200).json(result);
   } catch (error) {
@@ -159,8 +159,8 @@ export const controlFriendRequest = async (request: Request, response: Response)
 
 export const getFriends = async (request: Request, response: Response) => {
   try {
-    const { email, status } = request.query;
-    const result = await userService.getFriends({ email: email as string, status: status as string });
+    const { userId, status } = request.query;
+    const result = await userService.getFriends({ _id: userId as string, status: status as string });
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({

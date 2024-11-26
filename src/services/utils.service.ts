@@ -25,27 +25,27 @@ export const updateUserRank = (additionalPoints: number, userId: string) => {
   });
 };
 
-export const searchAll = ({ q, email }: { q: string; email: string }) => {
+export const searchAll = ({ q, userId }: { q: string; userId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
       const posts = await PostModel.find({ title: { $regex: new RegExp(q, 'i') } })
         .limit(10)
         .skip(0)
         .exec();
-      const user = await UserModel.findOne({ email }).select('friends');
-      const exceptEmails = [...(user?.friends.map((f) => f.friendEmail) ?? []), email];
+      const user = await UserModel.findOne({ userId }).select('friends');
+      const exceptIds = [...(user?.friends.map((f) => f.friendId) ?? []), userId];
       const users = await UserModel.find({
-        email: {
-          $nin: exceptEmails
+        _id: {
+          $nin: exceptIds
         },
-        $or: [{ fullName: { $regex: new RegExp(q, 'i') } }, { email: { $regex: new RegExp(q, 'i') } }]
+        $or: [{ fullName: { $regex: new RegExp(q, 'i') } }, { _id: { $regex: new RegExp(q, 'i') } }]
       })
-        .select('email fullName points rank avatarImg')
+        .select('_id fullName points rank avatarImg')
         .sort({ createdAt: -1 })
         .skip(0)
         .limit(10);
       const groups = await GroupModel.find({
-        'members.userEmail': { $nin: [email] },
+        'members.userEmail': { $nin: [userId] },
         $or: [{ name: { $regex: new RegExp(q, 'i') } }, { ownerEmail: { $regex: new RegExp(q, 'i') } }]
       })
         .skip(0)
@@ -120,17 +120,17 @@ export const searchPosts = ({ q, filter, page, limit }: SearchQueryParams) => {
 
 // search users
 
-export const searchUsers = ({ q, filter, page, limit, email }: SearchQueryParams) => {
+export const searchUsers = ({ q, filter, page, limit, userId }: SearchQueryParams) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user = await UserModel.findOne({ email }).select('friends');
+      const user = await UserModel.findById(userId).select('friends');
       let users: User[] = [];
       const skip = (page - 1) * limit;
       switch (filter) {
         case 'rank':
           users = await UserModel.find({
-            email: {
-              $nin: [email]
+            _id: {
+              $nin: [userId]
             },
             $or: [{ fullName: { $regex: new RegExp(q, 'i') } }, { email: { $regex: new RegExp(q, 'i') } }]
           })
@@ -141,12 +141,12 @@ export const searchUsers = ({ q, filter, page, limit, email }: SearchQueryParams
           break;
         default:
           users = await UserModel.find({
-            email: {
-              $nin: [email]
+            _id: {
+              $nin: [userId]
             },
-            $or: [{ fullName: { $regex: new RegExp(q, 'i') } }, { email: { $regex: new RegExp(q, 'i') } }]
+            $or: [{ fullName: { $regex: new RegExp(q, 'i') } }, { _id: { $regex: new RegExp(q, 'i') } }]
           })
-            .select('email fullName points rank avatarImg')
+            .select('_id fullName points rank avatarImg')
             .skip(0)
             .limit(10);
 
@@ -157,7 +157,7 @@ export const searchUsers = ({ q, filter, page, limit, email }: SearchQueryParams
         data: users.map((u) => ({
           ...u.toObject(),
           avatarImg: u.avatarImg?.url ?? null,
-          canAddFriend: !user.friends?.some((f) => f.friendEmail === u.email)
+          canAddFriend: !user.friends?.some((f) => f.friendId === u.email)
         }))
       });
     } catch (error) {
@@ -168,7 +168,7 @@ export const searchUsers = ({ q, filter, page, limit, email }: SearchQueryParams
 
 // search groups
 
-export const searchGroups = ({ q, filter, page, limit, email }: SearchQueryParams) => {
+export const searchGroups = ({ q, filter, page, limit, userId }: SearchQueryParams) => {
   return new Promise(async (resolve, reject) => {
     try {
       let groups: Group[] = [];
@@ -198,7 +198,7 @@ export const searchGroups = ({ q, filter, page, limit, email }: SearchQueryParam
             name: group.name,
             isPrivate: group.isPrivate,
             avatarImg: group.avatarImg?.url,
-            canJoin: !group.members?.some((m) => m.userEmail === email) && group.ownerEmail !== email
+            canJoin: !group.members?.some((m) => m.userId === userId) && group.ownerId !== userId
           };
         })
       });

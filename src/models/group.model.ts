@@ -29,7 +29,7 @@ const groupSchema: Schema<Group> = new Schema(
       )
     ],
     isPrivate: { type: Boolean, required: true, default: false },
-    ownerEmail: { type: String, required: true }
+    ownerId: { type: String, required: true }
   },
   { timestamps: true }
 );
