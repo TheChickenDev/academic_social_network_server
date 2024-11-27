@@ -51,17 +51,17 @@ io.on('connection', (socket) => {
     'chat message',
     async (msg: {
       conversationId: string;
-      senderEmail: string;
-      receiverEmail: string;
+      senderId: string;
+      receiverId: string;
       type: 'text' | 'image' | 'video' | 'audio' | 'icon';
       content: string;
     }) => {
       const result = await messageService.createMessage(msg);
-      const senderSocketId = userSocketMap.get(msg.senderEmail);
+      const senderSocketId = userSocketMap.get(msg.senderId);
       if (senderSocketId) {
         io.to(senderSocketId).emit('chat message', result);
       }
-      const receiverSocketId = userSocketMap.get(msg.receiverEmail);
+      const receiverSocketId = userSocketMap.get(msg.receiverId);
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('chat message', result);
       }

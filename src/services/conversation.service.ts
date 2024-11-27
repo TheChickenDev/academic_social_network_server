@@ -16,31 +16,30 @@ const getConversations = async ({ userId, page, limit }: { userId: string; page:
         });
       }
       const friends = await UserModel.find({
-        email: { $in: user.friends.filter((f) => f.status === 'accepted').map((f) => f.friendId) }
-      }).select('email fullName rank avatarImg');
-
+        _id: { $in: user.friends.filter((f) => f.status === 'accepted').map((f) => f.friendId) }
+      }).select('_id fullName rank avatarImg');
       const conversations = await ConversationModel.find({
         userIds: { $elemMatch: { $eq: userId } }
       }).sort({ updatedAt: -1 });
       const result = await Promise.all(
         friends.map(async (f) => {
-          const existConversation = conversations.find((c: Conversation) => c.userIds.includes(f._id.toString()));
+          const existConversation = await conversations.find((c: Conversation) => c.userIds.includes(f._id.toString()));
           if (existConversation) {
             const lastMessage = await MessageModel.findOne({ conversationId: existConversation._id }).sort({
               createdAt: -1
             });
             return {
               _id: existConversation._id,
-              userEmail: f.email,
+              userId: f._id,
               userRank: f.rank,
               userName: f.fullName,
               avatarImg: f.avatarImg?.url ?? null,
-              lastMessage: lastMessage?.message
+              lastMessage: { ...lastMessage?.toObject()?.message, senderId: lastMessage?.senderId }
             };
           }
           return {
             _id: null,
-            userEmail: f.email,
+            userId: f._id,
             userRank: f.rank,
             userName: f.fullName,
             avatarImg: f.avatarImg?.url ?? null,

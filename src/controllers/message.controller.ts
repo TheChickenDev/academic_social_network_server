@@ -6,10 +6,10 @@ import messageService from '../services/message.service';
 
 export const getMessages = async (request: Request, response: Response) => {
   try {
-    const { conversationId, userEmail, page, limit } = request.query;
+    const { conversationId, userId, page, limit } = request.query;
     const result = await messageService.getMessages({
       conversationId: conversationId as string,
-      userEmail: userEmail as string,
+      userId: userId as string,
       page: parseInt(page as string, 10) ?? 1,
       limit: parseInt(limit as string, 10) ?? 10
     });

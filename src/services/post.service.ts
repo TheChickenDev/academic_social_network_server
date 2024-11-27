@@ -48,41 +48,77 @@ const getRandomPosts = (query: PostQuery) => {
       if (!posts) {
         return reject({ message: 'Posts not found!' });
       }
-      const user = await UserModel.findById(query.userId).select('savedPosts');
-      resolve({
-        message: 'Posts found!',
-        data: await Promise.all(
-          posts.map(async (post) => {
-            const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
-            const likedBy = await Promise.all(
-              post.likedBy.map(async (id) => {
-                const likedInfo = await UserModel.findById(id).select('_id fullName');
-                return {
-                  userId: likedInfo?._id,
-                  userName: likedInfo?.fullName
-                };
-              })
-            );
-            const dislikedBy = await Promise.all(
-              post.dislikedBy.map(async (id) => {
-                const dislikedInfo = await UserModel.findById(id).select('_id fullName');
-                return {
-                  userId: dislikedInfo?._id,
-                  userName: dislikedInfo?.fullName
-                };
-              })
-            );
-            return {
-              ...post.toObject(),
-              ownerName: owner?.fullName,
-              ownerAvatar: owner?.avatarImg?.url,
-              likedBy,
-              dislikedBy,
-              isSaved: user?.savedPosts?.includes(post._id) ?? false
-            };
-          })
-        )
-      });
+      if (query.userId) {
+        const user = await UserModel.findById(query.userId).select('savedPosts');
+        return resolve({
+          message: 'Posts found!',
+          data: await Promise.all(
+            posts.map(async (post) => {
+              const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
+              const likedBy = await Promise.all(
+                post.likedBy.map(async (id) => {
+                  const likedInfo = await UserModel.findById(id).select('_id fullName');
+                  return {
+                    userId: likedInfo?._id,
+                    userName: likedInfo?.fullName
+                  };
+                })
+              );
+              const dislikedBy = await Promise.all(
+                post.dislikedBy.map(async (id) => {
+                  const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+                  return {
+                    userId: dislikedInfo?._id,
+                    userName: dislikedInfo?.fullName
+                  };
+                })
+              );
+              return {
+                ...post.toObject(),
+                ownerName: owner?.fullName,
+                ownerAvatar: owner?.avatarImg?.url,
+                likedBy,
+                dislikedBy,
+                isSaved: user?.savedPosts?.includes(post._id) ?? false
+              };
+            })
+          )
+        });
+      } else {
+        return resolve({
+          message: 'Posts found!',
+          data: await Promise.all(
+            posts.map(async (post) => {
+              const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
+              const likedBy = await Promise.all(
+                post.likedBy.map(async (id) => {
+                  const likedInfo = await UserModel.findById(id).select('_id fullName');
+                  return {
+                    userId: likedInfo?._id,
+                    userName: likedInfo?.fullName
+                  };
+                })
+              );
+              const dislikedBy = await Promise.all(
+                post.dislikedBy.map(async (id) => {
+                  const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+                  return {
+                    userId: dislikedInfo?._id,
+                    userName: dislikedInfo?.fullName
+                  };
+                })
+              );
+              return {
+                ...post.toObject(),
+                ownerName: owner?.fullName,
+                ownerAvatar: owner?.avatarImg?.url,
+                likedBy,
+                dislikedBy
+              };
+            })
+          )
+        });
+      }
     } catch (error) {
       reject(error);
     }

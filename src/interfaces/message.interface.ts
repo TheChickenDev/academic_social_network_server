@@ -8,7 +8,7 @@ interface MessageContent {
 export interface Message extends Document {
   _id?: ObjectId;
   conversationId: string;
-  senderEmail: string;
+  senderId: string;
   message: MessageContent[];
   createdAt?: Date;
   updatedAt?: Date;

@@ -6,14 +6,14 @@ import UserModel from '../models/user.model';
 
 const createMessage = async ({
   conversationId,
-  senderEmail,
-  receiverEmail,
+  senderId,
+  receiverId,
   type,
   content
 }: {
   conversationId: string;
-  senderEmail: string;
-  receiverEmail: string;
+  senderId: string;
+  receiverId: string;
   type: 'text' | 'image' | 'video' | 'audio' | 'icon';
   content: string;
 }) => {
@@ -21,11 +21,11 @@ const createMessage = async ({
     try {
       if (!conversationId) {
         const newConversation = await ConversationModel.create({
-          userEmails: [senderEmail, receiverEmail]
+          userIds: [senderId, receiverId]
         });
         const newMessage = await MessageModel.create({
           conversationId: newConversation._id,
-          senderEmail,
+          senderId,
           message: { type, content }
         });
         return resolve({
@@ -38,7 +38,7 @@ const createMessage = async ({
       await conversation.save();
       const newMessage = await MessageModel.create({
         conversationId: conversationId,
-        senderEmail,
+        senderId,
         message: { type, content }
       });
       return resolve({
@@ -55,12 +55,12 @@ const createMessage = async ({
 
 const getMessages = async ({
   conversationId,
-  userEmail,
+  userId,
   page,
   limit
 }: {
   conversationId: string;
-  userEmail: string;
+  userId: string;
   page: number;
   limit: number;
 }) => {
@@ -70,11 +70,11 @@ const getMessages = async ({
       const messages = await MessageModel.find({ conversationId }).sort({ createdAt: -1 }).skip(skip).limit(limit);
       const result = await Promise.all(
         messages.map(async (message) => {
-          const senderAvatar = await UserModel.findOne({ email: message.senderEmail }).select('avatarImg');
+          const senderAvatar = await UserModel.findById(message.senderId).select('avatarImg');
           return {
             _id: message._id,
             conversationId: message.conversationId,
-            senderEmail: message.senderEmail === userEmail ? 'You' : message.senderEmail,
+            senderId: message.senderId === userId ? 'You' : message.senderId,
             senderAvatar: senderAvatar?.avatarImg?.url ?? null,
             message: message.message,
             createdAt: message.createdAt
