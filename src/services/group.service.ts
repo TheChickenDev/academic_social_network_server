@@ -504,16 +504,19 @@ const getPosts = ({ id, postStatus }: GroupQuery) => {
       }
       return resolve({
         message: 'Get posts successful!',
-        data: postsData.map(async (post: Post) => {
-          const user = await UserModel.findById(post).select('fullName _id');
-          return {
-            _id: post._id,
-            title: post.title,
-            ownerName: user.fullName,
-            ownerId: user._id,
-            createdAt: post.createdAt
-          };
-        })
+        data: await Promise.all(
+          postsData.map(async (post: Post) => {
+            const user = await UserModel.findById(post.ownerId).select('fullName _id avatarImg');
+            return {
+              _id: post._id,
+              title: post.title,
+              ownerName: user.fullName,
+              ownerId: user._id,
+              ownerAvatar: user.avatarImg?.url,
+              createdAt: post.createdAt
+            };
+          })
+        )
       });
     } catch (error) {
       reject(error);
