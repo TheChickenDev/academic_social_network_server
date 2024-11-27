@@ -23,17 +23,39 @@ export const createGroup = async (request: Request, response: Response) => {
 
 export const getGroups = async (request: Request, response: Response) => {
   try {
-    const { id, ownerId, userId, memberEmail, getList, page, limit } = request.query;
-    const result = await groupService.getGroups({
-      id: id as string,
-      ownerId: ownerId as string,
-      userId: userId as string,
-      memberEmail: memberEmail as string,
-      getList: getList === 'true',
-      page: page ? parseInt(page as string, 10) : 1,
-      limit: limit ? parseInt(limit as string, 10) : 10
-    });
-    return response.status(200).json(result);
+    const { id, userId, page, limit, type } = request.query;
+    switch (type) {
+      case 'byId': {
+        const result = await groupService.getGroupById({
+          id: id as string,
+          userId: userId as string
+        });
+        return response.status(200).json(result);
+      }
+      case 'own': {
+        const result = await groupService.getOwnGroups({
+          userId: userId as string,
+          page: page ? parseInt(page as string, 10) : 1,
+          limit: limit ? parseInt(limit as string, 10) : 10
+        });
+        return response.status(200).json(result);
+      }
+      case 'joined': {
+        const result = await groupService.getJoinedGroups({
+          userId: userId as string,
+          page: page ? parseInt(page as string, 10) : 1,
+          limit: limit ? parseInt(limit as string, 10) : 10
+        });
+        return response.status(200).json(result);
+      }
+      default:
+        const result = await groupService.getRandomGroups({
+          userId: userId as string,
+          page: page ? parseInt(page as string, 10) : 1,
+          limit: limit ? parseInt(limit as string, 10) : 10
+        });
+        return response.status(200).json(result);
+    }
   } catch (error) {
     return response.status(400).json({
       message: error.message

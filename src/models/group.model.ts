@@ -12,7 +12,7 @@ const groupSchema: Schema<Group> = new Schema(
     members: [
       new Schema(
         {
-          userEmail: { type: String, required: true },
+          userId: { type: String, required: true },
           role: { type: String, enum: ['pending', 'member', 'moderator', 'admin'], required: true },
           joinDate: { type: Date, default: Date.now }
         },

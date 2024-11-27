@@ -42,6 +42,14 @@ export const getPosts = async (request: Request, response: Response) => {
         });
         return response.status(200).json(result);
       }
+      case 'inGroups': {
+        const result = await postService.getRandomPostsByGroups({
+          page: parseInt(page as string, 10) ?? 1,
+          limit: parseInt(limit as string, 10) ?? 10,
+          userId: userId as string
+        });
+        return response.status(200).json(result);
+      }
       default: {
         const result = await postService.getRandomPosts({
           page: parseInt(page as string, 10) ?? 1,

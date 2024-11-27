@@ -16,11 +16,16 @@ const comment = (commentData: Comment) => {
       const newComment = await CommentModel.create(commentData);
       post.numberOfComments += 1;
       post.save();
+      const user = await UserModel.findById(commentData.ownerId).select('fullName avatarImg');
       updateUserRank(COMMENT_POINT, commentData.ownerId);
       updateUserRank(COMMENT_POINT, post.ownerId);
       resolve({
         message: 'Comment successful!',
-        data: newComment
+        data: {
+          ...newComment.toObject(),
+          ownerName: user.fullName,
+          ownerAvatar: user.avatarImg?.url
+        }
       });
     } catch (error) {
       reject(error);
@@ -48,9 +53,14 @@ const replyComment = (replyData: Comment) => {
       await post.save();
       updateUserRank(COMMENT_POINT, replyData.ownerId);
       updateUserRank(COMMENT_POINT, post.ownerId);
+      const user = await UserModel.findById(newReply.ownerId).select('fullName avatarImg');
       resolve({
         message: 'Comment successful!',
-        data: newReply
+        data: {
+          ...newReply.toObject(),
+          ownerName: user.fullName,
+          ownerAvatar: user.avatarImg?.url
+        }
       });
     } catch (error) {
       reject(error);
@@ -243,18 +253,24 @@ const getCommentsByPostId = (query: CommentQuery) => {
                   };
                 })
               );
+              const user = await UserModel.findById(reply.ownerId).select('fullName avatarImg');
               return {
                 ...reply.toObject(),
                 likedBy,
-                dislikedBy
+                dislikedBy,
+                ownerName: user.fullName,
+                ownerAvatar: user.avatarImg?.url
               };
             })
           );
+          const user = await UserModel.findById(comment.ownerId).select('fullName avatarImg');
           return {
             ...comment.toObject(),
             replies: handledReplies,
             likedBy,
-            dislikedBy
+            dislikedBy,
+            ownerName: user.fullName,
+            ownerAvatar: user.avatarImg?.url
           };
         })
       );

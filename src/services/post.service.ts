@@ -24,9 +24,14 @@ const createPost = (newPostData: Post) => {
         }
       }
       updateUserRank(POST_POINT, newPost.ownerId);
+      const user = await UserModel.findById(newPost.ownerId).select('fullName avatarImg');
       resolve({
         message: 'Post successful!',
-        data: newPost
+        data: {
+          ...newPost.toObject(),
+          ownerName: user?.fullName,
+          ownerAvatar: user?.avatarImg?.url
+        }
       });
     } catch (error) {
       reject(error);
@@ -44,6 +49,62 @@ const getRandomPosts = (query: PostQuery) => {
         return reject({ message: 'Posts not found!' });
       }
       const user = await UserModel.findById(query.userId).select('savedPosts');
+      resolve({
+        message: 'Posts found!',
+        data: await Promise.all(
+          posts.map(async (post) => {
+            const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
+            const likedBy = await Promise.all(
+              post.likedBy.map(async (id) => {
+                const likedInfo = await UserModel.findById(id).select('_id fullName');
+                return {
+                  userId: likedInfo?._id,
+                  userName: likedInfo?.fullName
+                };
+              })
+            );
+            const dislikedBy = await Promise.all(
+              post.dislikedBy.map(async (id) => {
+                const dislikedInfo = await UserModel.findById(id).select('_id fullName');
+                return {
+                  userId: dislikedInfo?._id,
+                  userName: dislikedInfo?.fullName
+                };
+              })
+            );
+            return {
+              ...post.toObject(),
+              ownerName: owner?.fullName,
+              ownerAvatar: owner?.avatarImg?.url,
+              likedBy,
+              dislikedBy,
+              isSaved: user?.savedPosts?.includes(post._id) ?? false
+            };
+          })
+        )
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// get random posts by groups
+const getRandomPostsByGroups = (query: PostQuery) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const skip = (query.page - 1) * query.limit;
+      const user = await UserModel.findById(query.userId).select('savedPosts');
+      const groups = await GroupModel.find({
+        $or: [{ members: { $elemMatch: { userId: query.userId } } }, { ownerId: query.userId }]
+      }).select('_id');
+      const posts = await PostModel.find({ groupId: { $in: groups.map((g) => g._id) } })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(query.limit);
+      if (!posts) {
+        return reject({ message: 'Posts not found!' });
+      }
       resolve({
         message: 'Posts found!',
         data: await Promise.all(
@@ -267,7 +328,7 @@ const updatePost = (newData: Post) => {
   });
 };
 
-// update post
+// delete post
 const deletePost = (id: string) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -462,6 +523,7 @@ const dislikePost = (postId: string, userId: string) => {
 export default {
   createPost,
   getRandomPosts,
+  getRandomPostsByGroups,
   getOwnPosts,
   getSavedPosts,
   getGroupPosts,

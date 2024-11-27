@@ -33,12 +33,10 @@ export interface Group extends Document {
 // group post
 export interface GroupQuery {
   id?: string;
-  ownerId?: string;
   userId?: string;
-  memberEmail?: string;
-  getList?: boolean;
   page?: number;
   limit?: number;
+  type?: 'byId' | 'own' | 'joined' | 'random';
   memberRole?: 'pending' | 'member' | 'moderator' | 'admin' | 'all';
   postStatus?: 'pending' | 'approved' | 'rejected' | 'all';
 }
