@@ -38,22 +38,28 @@ export const searchAll = ({ q, userId }: { q: string; userId: string }) => {
         _id: {
           $nin: exceptIds
         },
-        $or: [{ fullName: { $regex: new RegExp(q, 'i') } }, { _id: { $regex: new RegExp(q, 'i') } }]
+        $or: [{ fullName: { $regex: new RegExp(q, 'i') } }]
       })
         .select('_id fullName points rank avatarImg')
         .sort({ createdAt: -1 })
         .skip(0)
         .limit(10);
       const groups = await GroupModel.find({
-        'members.userEmail': { $nin: [userId] },
-        $or: [{ name: { $regex: new RegExp(q, 'i') } }, { ownerEmail: { $regex: new RegExp(q, 'i') } }]
+        'members.userId': { $nin: [userId] },
+        $or: [{ name: { $regex: new RegExp(q, 'i') } }]
       })
         .skip(0)
         .limit(10);
       resolve({
         message: 'Search successfully!',
         data: {
-          posts,
+          posts: await Promise.all(
+            posts.map(async (post) => {
+              const postObject = post.toObject();
+              const owner = await UserModel.findById(postObject.ownerId).select('fullName avatarImg');
+              return { ...postObject, ownerName: owner?.fullName, ownerAvatar: owner?.avatarImg?.url };
+            })
+          ),
           users: users.map((user) => ({ ...user.toObject(), avatarImg: user.avatarImg?.url ?? null })),
           groups: groups.map((group) => {
             const groupObject = group.toObject();
@@ -110,7 +116,16 @@ export const searchPosts = ({ q, filter, page, limit }: SearchQueryParams) => {
       }
       resolve({
         message: 'Search successfully!',
-        data: posts
+        data: await Promise.all(
+          posts.map(async (post) => {
+            const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
+            return {
+              ...post.toObject(),
+              ownerName: owner?.fullName,
+              ownerAvatar: owner?.avatarImg?.url
+            };
+          })
+        )
       });
     } catch (error) {
       reject(error);
@@ -132,9 +147,9 @@ export const searchUsers = ({ q, filter, page, limit, userId }: SearchQueryParam
             _id: {
               $nin: [userId]
             },
-            $or: [{ fullName: { $regex: new RegExp(q, 'i') } }, { email: { $regex: new RegExp(q, 'i') } }]
+            fullName: { $regex: new RegExp(q, 'i') }
           })
-            .select('email fullName points rank avatarImg')
+            .select('_id fullName points rank avatarImg')
             .sort({ points: -1 })
             .skip(skip)
             .limit(limit);
@@ -144,7 +159,7 @@ export const searchUsers = ({ q, filter, page, limit, userId }: SearchQueryParam
             _id: {
               $nin: [userId]
             },
-            $or: [{ fullName: { $regex: new RegExp(q, 'i') } }, { _id: { $regex: new RegExp(q, 'i') } }]
+            fullName: { $regex: new RegExp(q, 'i') }
           })
             .select('_id fullName points rank avatarImg')
             .skip(0)
@@ -157,7 +172,7 @@ export const searchUsers = ({ q, filter, page, limit, userId }: SearchQueryParam
         data: users.map((u) => ({
           ...u.toObject(),
           avatarImg: u.avatarImg?.url ?? null,
-          canAddFriend: !user.friends?.some((f) => f.friendId === u.email)
+          canAddFriend: !user?.friends?.some((f) => f.friendId === u.email)
         }))
       });
     } catch (error) {

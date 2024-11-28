@@ -391,14 +391,14 @@ const deletePost = (id: string) => {
 };
 
 // get post by id
-const getPostById = (id: string, userEmail: string) => {
+const getPostById = (id: string, userId: string) => {
   return new Promise(async (resolve, reject) => {
     try {
       const post = await PostModel.findById(id);
       if (!post) {
         return reject({ message: 'Post not found!' });
       }
-      const user = await UserModel.findOne({ email: userEmail }).select('fullName avatarImg savedPosts');
+      const user = await UserModel.findById(userId).select('savedPosts');
       const likedBy = await Promise.all(
         post.likedBy.map(async (id) => {
           const likedInfo = await UserModel.findById(id).select('_id fullName');
@@ -417,12 +417,13 @@ const getPostById = (id: string, userEmail: string) => {
           };
         })
       );
+      const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg');
       resolve({
         message: 'Post found!',
         data: {
           ...post?.toObject(),
-          ownerName: user?.fullName,
-          ownerAvatar: user?.avatarImg?.url,
+          ownerName: owner?.fullName,
+          ownerAvatar: owner?.avatarImg?.url,
           likedBy,
           dislikedBy,
           isSaved: user?.savedPosts?.includes(post._id) ?? false
