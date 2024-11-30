@@ -32,8 +32,8 @@ export const searchAll = ({ q, userId }: { q: string; userId: string }) => {
         .limit(10)
         .skip(0)
         .exec();
-      const user = await UserModel.findOne({ userId }).select('friends');
-      const exceptIds = [...(user?.friends.map((f) => f.friendId) ?? []), userId];
+      const user = await UserModel.findById(userId).select('friends');
+      const exceptIds = [userId];
       const users = await UserModel.find({
         _id: {
           $nin: exceptIds
@@ -60,7 +60,11 @@ export const searchAll = ({ q, userId }: { q: string; userId: string }) => {
               return { ...postObject, ownerName: owner?.fullName, ownerAvatar: owner?.avatarImg?.url };
             })
           ),
-          users: users.map((user) => ({ ...user.toObject(), avatarImg: user.avatarImg?.url ?? null })),
+          users: users.map((u) => ({
+            ...u.toObject(),
+            avatarImg: u.avatarImg?.url ?? null,
+            canAddFriend: !user?.friends?.some((f) => f.friendId === u._id.toString())
+          })),
           groups: groups.map((group) => {
             const groupObject = group.toObject();
             return {
@@ -172,7 +176,7 @@ export const searchUsers = ({ q, filter, page, limit, userId }: SearchQueryParam
         data: users.map((u) => ({
           ...u.toObject(),
           avatarImg: u.avatarImg?.url ?? null,
-          canAddFriend: !user?.friends?.some((f) => f.friendId === u.email)
+          canAddFriend: !user?.friends?.some((f) => f.friendId === u._id.toString())
         }))
       });
     } catch (error) {
