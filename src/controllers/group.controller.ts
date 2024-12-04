@@ -24,6 +24,13 @@ export const createGroup = async (request: Request, response: Response) => {
 export const getGroups = async (request: Request, response: Response) => {
   try {
     const { id, userId, page, limit, type } = request.query;
+    if (limit === '0') {
+      const result = await groupService.getGroupsForAdmin({
+        page: page ? parseInt(page as string, 10) : 1,
+        limit: limit ? parseInt(limit as string, 10) : 10
+      });
+      return response.status(200).json(result);
+    }
     switch (type) {
       case 'byId': {
         const result = await groupService.getGroupById({

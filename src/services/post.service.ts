@@ -39,6 +39,34 @@ const createPost = (newPostData: Post) => {
   });
 };
 
+// get posts for admin page
+const getPostsForAdmin = (query: PostQuery) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const posts = await PostModel.find({}).sort({ createdAt: -1 });
+      if (!posts) {
+        return reject({ message: 'Posts not found!' });
+      }
+      resolve({
+        message: 'Posts found!',
+        data: await Promise.all(
+          posts.map(async (post) => {
+            const owner = await UserModel.findById(post.ownerId).select('fullName avatarImg email');
+            return {
+              ...post.toObject(),
+              ownerName: owner?.fullName,
+              ownerAvatar: owner?.avatarImg?.url,
+              ownerEmail: owner?.email
+            };
+          })
+        )
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 // get random posts
 const getRandomPosts = (query: PostQuery) => {
   return new Promise(async (resolve, reject) => {
@@ -568,5 +596,6 @@ export default {
   likePost,
   dislikePost,
   updatePost,
-  deletePost
+  deletePost,
+  getPostsForAdmin
 };

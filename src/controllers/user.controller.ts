@@ -107,6 +107,19 @@ export const updateUser = async (request: Request, response: Response) => {
   }
 };
 
+// delete user
+export const deleteUser = async (request: Request, response: Response) => {
+  try {
+    const { userId } = request.query;
+    const result = await userService.deleteUser(userId as string);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
 // get user
 export const getUser = async (request: Request, response: Response) => {
   try {

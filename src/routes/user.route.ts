@@ -12,9 +12,10 @@ import {
   controlFriendRequest,
   getFriends,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  deleteUser
 } from '../controllers/user.controller';
-import { authUserMiddleware } from '../middlewares/auth';
+import { authAdminMiddleware, authUserMiddleware } from '../middlewares/auth';
 const router = express.Router();
 
 router.get('/', getUser);
@@ -25,6 +26,7 @@ router.post('/refresh-token', refreshToken);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.patch('/', authUserMiddleware, upload.array('images', 1), uploadUserImagesToCloudinary, updateUser);
+router.delete('/', authAdminMiddleware, deleteUser);
 router.patch('/friends', authUserMiddleware, controlFriendRequest);
 router.get('/friends', getFriends);
 router.patch('/posts', authUserMiddleware, controlPostRequest);

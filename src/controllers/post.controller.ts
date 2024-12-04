@@ -17,6 +17,13 @@ export const createPost = async (request: Request, response: Response) => {
 export const getPosts = async (request: Request, response: Response) => {
   try {
     const { page, limit, userId, groupId, type } = request.query;
+    if (limit === '0') {
+      const result = await postService.getPostsForAdmin({
+        page: parseInt(page as string, 10) ?? 1,
+        limit: parseInt(limit as string, 10) ?? 10
+      });
+      return response.status(200).json(result);
+    }
     switch (type) {
       case 'own': {
         const result = await postService.getOwnPosts({

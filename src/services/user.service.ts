@@ -5,6 +5,7 @@ import jwtService from './jwt';
 import PostModel from '../models/post.model';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import GroupModel from '../models/group.model';
 
 const transporter = nodemailer.createTransport({
   service: process.env.MY_EMAIL_SERVICE,
@@ -326,6 +327,41 @@ const updateUser = (data: UpdateUserInput) => {
   });
 };
 
+// delete user
+const deleteUser = (userId: string) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user: User = await UserModel.findByIdAndDelete(userId);
+      if (!user) {
+        return reject({
+          message: 'User not found!'
+        });
+      }
+      for (let i = 0; i < user.friends.length; i++) {
+        const friend: User = await UserModel.findById(user.friends[i].friendId);
+        if (!friend) {
+          continue;
+        }
+        friend.friends = friend.friends.filter((f) => f.friendId !== userId);
+        friend.save();
+      }
+      PostModel.deleteMany({ ownerId: userId });
+      GroupModel.deleteMany({ ownerId: userId });
+      GroupModel.find({ 'members.userId': userId }).then((groups) => {
+        groups.forEach((group) => {
+          group.members = group.members.filter((member) => member.userId !== userId);
+          group.save();
+        });
+      });
+      resolve({
+        message: 'Delete user successful!'
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 // get user
 const getUser = ({ userId }: UserQuery) => {
   return new Promise(async (resolve, reject) => {
@@ -366,10 +402,24 @@ const getUser = ({ userId }: UserQuery) => {
 const getUsers = (query: UserQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const skip = (query?.page - 1) * query?.limit;
       const user = await UserModel.findById(query.userId).select('friends');
       const exceptIds = [...(user?.friends.map((f) => f.friendId) ?? []), query?.userId];
-      const users = await UserModel.find({ _id: { $nin: exceptIds } })
+      if (query?.limit === 0) {
+        const users = await UserModel.find({ _id: { $nin: exceptIds }, isAdmin: false })
+          .select('email fullName points rank avatarImg')
+          .sort({ createdAt: -1 });
+        if (!users) {
+          return reject({
+            message: 'No user found!'
+          });
+        }
+        return resolve({
+          message: 'Get users successful!',
+          data: users.map((user) => ({ ...user.toObject(), avatarImg: user.avatarImg?.url ?? null }))
+        });
+      }
+      const skip = (query?.page - 1) * query?.limit;
+      const users = await UserModel.find({ _id: { $nin: exceptIds }, isAdmin: false })
         .select('email fullName points rank avatarImg')
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -608,6 +658,7 @@ export default {
   forgotPassword,
   resetPassword,
   updateUser,
+  deleteUser,
   getUser,
   getUsers,
   addFriend,

@@ -51,6 +51,42 @@ const createGroup = (data: {
   });
 };
 
+// get groups for admin
+
+const getGroupsForAdmin = ({ page, limit }: GroupQuery) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const groups = await GroupModel.find()
+        .skip((page - 1) * limit)
+        .limit(limit);
+      if (!groups) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      return resolve({
+        message: 'Get groups successful!',
+        data: await Promise.all(
+          groups.map(async (group) => {
+            const owner = await UserModel.findById(group.ownerId).select('fullName avatarImg email');
+            const groupObject = group.toObject();
+            return {
+              _id: groupObject._id,
+              name: groupObject.name,
+              isPrivate: groupObject.isPrivate,
+              avatarImg: groupObject.avatarImg?.url,
+              ownerName: owner.fullName,
+              ownerEmail: owner.email
+            };
+          })
+        )
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 // get group by id
 
 const getGroupById = ({ id, userId }: GroupQuery) => {
@@ -217,6 +253,27 @@ const getJoinedGroups = ({ userId, page, limit }: GroupQuery) => {
             avatarImg: groupObject.avatarImg?.url
           };
         })
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+// delete group
+
+const deleteGroup = (id: string) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const group = await GroupModel.findByIdAndDelete(id);
+      if (!group) {
+        return reject({
+          message: 'Group not found!'
+        });
+      }
+      PostModel.deleteMany({ _id: { $in: group.posts?.map((post) => post.postId) } });
+      return resolve({
+        message: 'Delete group successful!'
       });
     } catch (error) {
       reject(error);
@@ -584,9 +641,11 @@ const rejectPost = ({ id, postId }: { id: string; postId: string }) => {
 export default {
   createGroup,
   getGroupById,
+  getGroupsForAdmin,
   getOwnGroups,
   getRandomGroups,
   getJoinedGroups,
+  deleteGroup,
   updateGroup,
   getMembers,
   requestToJoin,
