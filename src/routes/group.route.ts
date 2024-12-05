@@ -1,8 +1,9 @@
 import express from 'express';
 import { upload, uploadGroupImagesToCloudinary } from '../middlewares/upload.middleware';
-import { authUserMiddleware } from '../middlewares/auth';
+import { authAdminMiddleware, authUserMiddleware } from '../middlewares/auth';
 import {
   createGroup,
+  deleteGroup,
   getGroups,
   getMembers,
   getPosts,
@@ -19,5 +20,6 @@ router.get('/members', getMembers);
 router.patch('/members', authUserMiddleware, memberRequestController);
 router.get('/posts', getPosts);
 router.patch('/posts', authUserMiddleware, postRequestController);
+router.delete('/:id', authAdminMiddleware, deleteGroup);
 
 export default router;

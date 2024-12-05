@@ -83,6 +83,19 @@ export const updateGroup = async (request: Request, response: Response) => {
   }
 };
 
+// delete group
+
+export const deleteGroup = async (request: Request, response: Response) => {
+  try {
+    const result = await groupService.deleteGroup(request.params.id);
+    return response.status(200).json(result);
+  } catch (error) {
+    return response.status(400).json({
+      message: error.message
+    });
+  }
+};
+
 // get members
 
 export const getMembers = async (request: Request, response: Response) => {

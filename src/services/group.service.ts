@@ -75,8 +75,9 @@ const getGroupsForAdmin = ({ page, limit }: GroupQuery) => {
               name: groupObject.name,
               isPrivate: groupObject.isPrivate,
               avatarImg: groupObject.avatarImg?.url,
-              ownerName: owner.fullName,
-              ownerEmail: owner.email
+              ownerName: owner?.fullName,
+              ownerEmail: owner?.email,
+              createdAt: groupObject.createdAt
             };
           })
         )
