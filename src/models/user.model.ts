@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import { Job, Education, Contact, Introduction, User, Friend, Notification } from '../interfaces/user.interface';
+import { Job, Education, Contact, Introduction, User } from '../interfaces/user.interface';
 import { ImageSchema } from './utils.model';
 
 // job
@@ -57,19 +57,6 @@ const introductionSchema: Schema<Introduction> = new Schema(
   { _id: false }
 );
 
-// notification
-
-const notificationSchema: Schema<Notification> = new Schema(
-  {
-    userEmail: { type: String },
-    groupId: { type: String },
-    type: { type: String, enum: ['friend', 'post', 'postInGroup', 'comment'] },
-    content: { type: String },
-    isRead: { type: Boolean, default: false }
-  },
-  { timestamps: true }
-);
-
 // user
 
 const userSchema: Schema<User> = new mongoose.Schema(
@@ -121,7 +108,6 @@ const userSchema: Schema<User> = new mongoose.Schema(
         { _id: false }
       )
     ],
-    notifications: { type: [notificationSchema], required: false, default: [] },
     avatarImg: { type: ImageSchema, required: false, default: null },
     isAdmin: { type: Boolean, required: false, default: false },
     isActive: { type: Boolean, required: false, default: true },

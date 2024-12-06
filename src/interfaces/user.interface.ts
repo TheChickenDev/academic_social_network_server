@@ -45,18 +45,6 @@ export interface Friend {
   updatedAt?: Date;
 }
 
-// notification
-
-export interface Notification {
-  userEmail: string;
-  groupId: string;
-  type: 'friend' | 'post' | 'postInGroup' | 'comment';
-  content: string;
-  isRead: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
 // user
 export interface User extends Document {
   _id: ObjectId;
@@ -72,7 +60,6 @@ export interface User extends Document {
   rank: string;
   savedPosts: string[];
   friends: Friend[];
-  notifications: Notification[];
   avatarImg: ImageData;
   isAdmin: boolean;
   isActive: boolean;

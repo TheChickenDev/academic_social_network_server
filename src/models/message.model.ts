@@ -1,5 +1,7 @@
 import mongoose, { Model, Schema } from 'mongoose';
 import { Message } from '../interfaces/message.interface';
+import ConversationModel from './conversation.model';
+import { getSocketIO, getSocketId } from '../services/socket.service';
 
 const messageSchema: Schema<Message> = new Schema(
   {
@@ -29,6 +31,20 @@ const messageSchema: Schema<Message> = new Schema(
   },
   { timestamps: true }
 );
+
+messageSchema.post('save', async function (doc) {
+  const conversation = await ConversationModel.findById(doc.conversationId);
+  if (!conversation) {
+    return;
+  }
+  const io = getSocketIO();
+  conversation.userIds?.forEach((userId) => {
+    const socketId = getSocketId(userId);
+    if (socketId) {
+      io.to(socketId).emit('chat message', doc);
+    }
+  });
+});
 
 const MessageModel: Model<Message> = mongoose.model('Message', messageSchema);
 
