@@ -5,6 +5,7 @@ import CommentRouter from './comment.route';
 import GroupRouter from './group.route';
 import ConversationRouter from './conversation.route';
 import MessageRouter from './message.route';
+import NotificationRouter from './notification.route';
 import UtilsRouter from './utils.route';
 
 const routes = (app: Application) => {
@@ -14,6 +15,7 @@ const routes = (app: Application) => {
   app.use('/api/groups', GroupRouter);
   app.use('/api/conversations', ConversationRouter);
   app.use('/api/messages', MessageRouter);
+  app.use('/api/notifications', NotificationRouter);
   app.use('/api', UtilsRouter);
 };
 

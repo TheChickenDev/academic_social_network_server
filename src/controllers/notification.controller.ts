@@ -1,13 +1,12 @@
 import { Request, Response } from 'express';
-import messageService from '../services/message.service';
+import { getNotifications as getNotis } from '../services/notification.service';
 
-// get messages
+// get notifications
 
-export const getMessages = async (request: Request, response: Response) => {
+export const getNotifications = async (request: Request, response: Response) => {
   try {
-    const { conversationId, userId, page, limit } = request.query;
-    const result = await messageService.getMessages({
-      conversationId: conversationId as string,
+    const { userId, page, limit } = request.query;
+    const result = await getNotis({
       userId: userId as string,
       page: parseInt(page as string, 10) ?? 1,
       limit: parseInt(limit as string, 10) ?? 10

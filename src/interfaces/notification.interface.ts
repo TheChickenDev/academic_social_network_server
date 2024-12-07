@@ -10,7 +10,9 @@ export interface Notification extends Document {
     | 'createPost'
     | 'commentPost';
   groupId?: string;
+  postId?: string;
   userId: string;
-  isRead: boolean;
-  ownerId: string;
+  receiverIds: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }

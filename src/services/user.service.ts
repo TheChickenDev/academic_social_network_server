@@ -6,6 +6,7 @@ import PostModel from '../models/post.model';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import GroupModel from '../models/group.model';
+import NotificationModel from '../models/notification.model';
 
 const transporter = nodemailer.createTransport({
   service: process.env.MY_EMAIL_SERVICE,
@@ -446,19 +447,19 @@ const addFriend = (data: { _id: string; friendId: string }) => {
     try {
       const user: User = await UserModel.findById(data._id);
       if (!user) {
-        reject({
+        return reject({
           message: 'User not found!'
         });
       }
       const friend: User = await UserModel.findById(data.friendId);
       if (!friend) {
-        reject({
+        return reject({
           message: 'Friend not found!'
         });
       }
       const isFriend = user.friends?.find((f) => f.friendId === data.friendId);
       if (isFriend) {
-        reject({
+        return reject({
           message: 'Friend already exists!'
         });
       }
@@ -466,6 +467,11 @@ const addFriend = (data: { _id: string; friendId: string }) => {
       friend.friends?.push({ friendId: data._id, status: 'pending' });
       await user.save();
       await friend.save();
+      NotificationModel.create({
+        type: 'sendFriendRequest',
+        userId: data._id,
+        receiverIds: [data.friendId]
+      });
       resolve({
         message: 'Add friend successful!'
       });
@@ -482,32 +488,37 @@ const acceptFriend = (data: { _id: string; friendId: string }) => {
     try {
       const user: User = await UserModel.findById(data._id);
       if (!user) {
-        reject({
+        return reject({
           message: 'User not found!'
         });
       }
       const friend: User = await UserModel.findById(data.friendId);
       if (!friend) {
-        reject({
+        return reject({
           message: 'Friend not found!'
         });
       }
       const friendIndex = user.friends?.findIndex((f) => f.friendId === data.friendId);
       if (friendIndex === -1) {
-        reject({
+        return reject({
           message: 'Friend not found!'
         });
       }
       user.friends[friendIndex].status = 'accepted';
       const friendIndex2 = friend.friends?.findIndex((f) => f.friendId === data._id);
       if (friendIndex2 === -1) {
-        reject({
+        return reject({
           message: 'Friend not found!'
         });
       }
       friend.friends[friendIndex2].status = 'accepted';
       await user.save();
       await friend.save();
+      NotificationModel.create({
+        type: 'acceptFriendRequest',
+        userId: data._id,
+        receiverIds: [data.friendId]
+      });
       resolve({
         message: 'Accept friend successful!'
       });
@@ -524,32 +535,37 @@ const removeFriend = (data: { _id: string; friendId: string }) => {
     try {
       const user: User = await UserModel.findById(data._id);
       if (!user) {
-        reject({
+        return reject({
           message: 'User not found!'
         });
       }
       const friend: User = await UserModel.findById(data.friendId);
       if (!friend) {
-        reject({
+        return reject({
           message: 'Friend not found!'
         });
       }
       const friendIndex = user.friends?.findIndex((f) => f.friendId === data.friendId);
       if (friendIndex === -1) {
-        reject({
+        return reject({
           message: 'Friend not found!'
         });
       }
       user.friends.splice(friendIndex, 1);
       const friendIndex2 = friend.friends?.findIndex((f) => f.friendId === data._id);
       if (friendIndex2 === -1) {
-        reject({
+        return reject({
           message: 'Friend not found!'
         });
       }
       friend.friends.splice(friendIndex2, 1);
       await user.save();
       await friend.save();
+      NotificationModel.create({
+        type: 'rejectFriendRequest',
+        userId: data._id,
+        receiverIds: [data.friendId]
+      });
       resolve({
         message: 'Remove friend successful!'
       });
