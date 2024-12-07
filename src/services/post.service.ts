@@ -4,6 +4,7 @@ import PostModel from '../models/post.model';
 import GroupModel from '../models/group.model';
 import { DISLIKE_POINT, LIKE_POINT, POST_POINT } from '../constants/point';
 import { updateUserRank } from './utils.service';
+import NotificationModel from '../models/notification.model';
 
 // create post
 const createPost = (newPostData: Post) => {
@@ -24,7 +25,14 @@ const createPost = (newPostData: Post) => {
         }
       }
       updateUserRank(POST_POINT, newPost.ownerId);
-      const user = await UserModel.findById(newPost.ownerId).select('fullName avatarImg');
+      const user = await UserModel.findById(newPost.ownerId).select('fullName avatarImg friends');
+      NotificationModel.create({
+        type: 'createPost',
+        userId: newPost.ownerId,
+        receiverIds:
+          user?.friends?.filter((friend) => friend.status === 'accepted').map((friend) => friend.friendId) ?? [],
+        postId: newPost._id
+      });
       resolve({
         message: 'Post successful!',
         data: {

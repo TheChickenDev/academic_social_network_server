@@ -14,11 +14,9 @@ const notificationSchema: Schema<Notification> = new Schema(
         'sendFriendRequest',
         'acceptFriendRequest',
         'rejectFriendRequest',
-        'unfriend',
-        'joinGroup',
-        'leaveGroup',
         'createPost',
-        'commentPost'
+        'commentPost',
+        'replyComment'
       ]
     },
     groupId: {

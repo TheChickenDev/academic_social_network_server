@@ -4,6 +4,7 @@ import { Document } from 'mongoose';
 import { updateUserRank } from './utils.service';
 import { COMMENT_POINT } from '../constants/point';
 import UserModel from '../models/user.model';
+import NotificationModel from '../models/notification.model';
 
 // comment
 const comment = (commentData: Comment) => {
@@ -19,6 +20,14 @@ const comment = (commentData: Comment) => {
       const user = await UserModel.findById(commentData.ownerId).select('fullName avatarImg');
       updateUserRank(COMMENT_POINT, commentData.ownerId);
       updateUserRank(COMMENT_POINT, post.ownerId);
+      if (newComment.ownerId !== post.ownerId) {
+        NotificationModel.create({
+          type: 'commentPost',
+          userId: newComment.ownerId,
+          receiverIds: [post.ownerId],
+          postId: post._id
+        });
+      }
       resolve({
         message: 'Comment successful!',
         data: {
@@ -53,6 +62,14 @@ const replyComment = (replyData: Comment) => {
       await post.save();
       updateUserRank(COMMENT_POINT, replyData.ownerId);
       updateUserRank(COMMENT_POINT, post.ownerId);
+      if (newReply.ownerId !== comment.ownerId) {
+        NotificationModel.create({
+          type: 'replyComment',
+          userId: newReply.ownerId,
+          receiverIds: [comment.ownerId],
+          postId: post._id
+        });
+      }
       const user = await UserModel.findById(newReply.ownerId).select('fullName avatarImg');
       resolve({
         message: 'Comment successful!',

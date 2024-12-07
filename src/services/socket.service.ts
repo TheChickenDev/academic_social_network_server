@@ -14,8 +14,8 @@ export const initializeSocketIO = (server: any) => {
   });
 
   io.on('connection', (socket) => {
-    console.log('a user connected');
     const userId = socket.handshake.query.userId as string;
+    console.log(`a user connected: ${userId}`);
     userSocketMap.set(userId, socket.id);
 
     socket.on(
@@ -32,7 +32,7 @@ export const initializeSocketIO = (server: any) => {
     );
 
     socket.on('disconnect', () => {
-      console.log('user disconnected');
+      console.log(`user disconnected: ${userId}`);
       userSocketMap.delete(userId);
     });
   });

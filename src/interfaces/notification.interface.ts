@@ -4,11 +4,9 @@ export interface Notification extends Document {
     | 'sendFriendRequest'
     | 'acceptFriendRequest'
     | 'rejectFriendRequest'
-    | 'unfriend'
-    | 'joinGroup'
-    | 'leaveGroup'
     | 'createPost'
-    | 'commentPost';
+    | 'commentPost'
+    | 'replyComment';
   groupId?: string;
   postId?: string;
   userId: string;
