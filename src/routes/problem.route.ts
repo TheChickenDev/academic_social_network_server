@@ -1,0 +1,10 @@
+import express from 'express';
+import { authAdminMiddleware } from '../middlewares/auth';
+import { createProblem, getProblems, updateProblem } from '../controllers/problem.controller';
+const router = express.Router();
+
+router.post('/', authAdminMiddleware, createProblem);
+router.get('/', getProblems);
+router.patch('/', authAdminMiddleware, updateProblem);
+
+export default router;

@@ -6,6 +6,8 @@ import GroupRouter from './group.route';
 import ConversationRouter from './conversation.route';
 import MessageRouter from './message.route';
 import NotificationRouter from './notification.route';
+import ContestRouter from './contest.route';
+import ProblemRouter from './problem.route';
 import UtilsRouter from './utils.route';
 
 const routes = (app: Application) => {
@@ -16,6 +18,8 @@ const routes = (app: Application) => {
   app.use('/api/conversations', ConversationRouter);
   app.use('/api/messages', MessageRouter);
   app.use('/api/notifications', NotificationRouter);
+  app.use('/api/contests', ContestRouter);
+  app.use('/api/problems', ProblemRouter);
   app.use('/api', UtilsRouter);
 };
 
