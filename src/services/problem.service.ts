@@ -1,5 +1,6 @@
-import { ContestProblem } from '../interfaces/contest.interface';
+import { ContestProblem, ContestSubmission } from '../interfaces/contest.interface';
 import ContestProblemModel from '../models/contest-problem.model';
+import ContestSubmissionModel from '../models/contest-submission.model';
 
 const createProblem = async (contestData: ContestProblem) => {
   return new Promise(async (resolve, reject) => {
@@ -19,20 +20,36 @@ const getProblems = async ({
   page,
   limit,
   contestId,
-  problemId
+  problemId,
+  userId
 }: {
   page: number;
   limit: number;
   contestId: string;
   problemId: string;
+  userId: string;
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
       if (problemId) {
         const contest = await ContestProblemModel.findById(problemId);
+        const submission = await ContestSubmissionModel.find({
+          problemId,
+          userId
+        });
+
         return resolve({
           message: 'Problem fetched successfully!',
-          data: contest
+          data: {
+            title: contest.title,
+            description: contest.description,
+            difficulty: contest.difficulty,
+            testCases: contest.testCases,
+            sampleCode: contest.sampleCode,
+            _id: contest._id,
+            isSolved: submission.length > 0,
+            submitedCode: submission[0]?.code
+          }
         });
       }
       const contests = await ContestProblemModel.find({ contestId }).skip((page - 1) * limit);
@@ -60,8 +77,23 @@ const updateProblem = async (problemId: string, problemData: ContestProblem) => 
   });
 };
 
+const createSubmission = async (submissionData: ContestSubmission) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const submission = await ContestSubmissionModel.create(submissionData);
+      resolve({
+        message: 'Submission created successfully!',
+        data: submission
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 export default {
   createProblem,
   getProblems,
-  updateProblem
+  updateProblem,
+  createSubmission
 };

@@ -8,11 +8,6 @@ const contestSubmissionSchema: Schema<ContestSubmission> = new Schema(
       ref: 'User',
       required: true
     },
-    contestId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Contest',
-      required: true
-    },
     problemId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Contest Problem',
@@ -29,7 +24,7 @@ const contestSubmissionSchema: Schema<ContestSubmission> = new Schema(
     status: {
       type: String,
       enum: ['pending', 'accepted', 'wrong answer', 'runtime error', 'compilation error'],
-      default: 'pending'
+      default: 'accepted'
     }
   },
   { timestamps: true }

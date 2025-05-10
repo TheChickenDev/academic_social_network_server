@@ -32,6 +32,19 @@ const contestProblemSchema: Schema<ContestProblem> = new Schema(
         }
       }
     ],
+    sampleCode: {
+      type: new Schema(
+        {
+          javascript: { type: String, required: true },
+          python: { type: String, required: true },
+          java: { type: String, required: true },
+          c: { type: String, required: true },
+          cpp: { type: String, required: true }
+        },
+        { _id: false }
+      ),
+      required: false
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

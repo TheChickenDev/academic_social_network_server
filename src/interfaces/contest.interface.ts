@@ -37,6 +37,13 @@ export interface ContestProblem {
       output: string;
     }
   ];
+  sampleCode?: {
+    javascript: string;
+    python: string;
+    java: string;
+    c: string;
+    cpp: string;
+  };
   createdBy: ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -45,11 +52,10 @@ export interface ContestProblem {
 export interface ContestSubmission {
   _id?: ObjectId;
   userId: ObjectId;
-  contestId: ObjectId;
   problemId: ObjectId;
   language: string;
   code: string;
-  status: 'pending' | 'accepted' | 'wrong answer' | 'runtime error' | 'compilation error';
+  status?: 'pending' | 'accepted' | 'wrong answer' | 'runtime error' | 'compilation error';
   createdAt?: Date;
   updatedAt?: Date;
 }

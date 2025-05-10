@@ -15,9 +15,30 @@ const createContest = async (contestData: Contest) => {
   });
 };
 
-const getContests = async ({ title, startDate, endDate }: { title: string; startDate: string; endDate: string }) => {
+const getContests = async ({
+  title,
+  startDate,
+  endDate,
+  contestId
+}: {
+  title: string;
+  startDate: string;
+  endDate: string;
+  contestId: string;
+}) => {
+  console.log(contestId);
   return new Promise(async (resolve, reject) => {
     try {
+      if (contestId) {
+        const contest = await ContestModel.findById(contestId);
+        if (!contest) {
+          return reject(new Error('Contest not found'));
+        }
+        return resolve({
+          message: 'Contest fetched successfully',
+          data: contest
+        });
+      }
       const query: any = {};
       if (title) query.title = { $regex: title, $options: 'i' };
       if (startDate) query.startDate = { $gte: new Date(startDate) };

@@ -22,11 +22,12 @@ export const createContest = async (req: Request, res: Response) => {
 
 export const getContests = async (req: Request, res: Response) => {
   try {
-    const { title, startDate, endDate } = req.query;
+    const { title, startDate, endDate, contestId } = req.query;
     const contests = await contestService.getContests({
       title: typeof title === 'string' ? title : undefined,
       startDate: typeof startDate === 'string' ? startDate : undefined,
-      endDate: typeof endDate === 'string' ? endDate : undefined
+      endDate: typeof endDate === 'string' ? endDate : undefined,
+      contestId: typeof contestId === 'string' ? contestId : undefined
     });
     return res.status(200).json(contests);
   } catch (error) {
