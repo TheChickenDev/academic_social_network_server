@@ -21,14 +21,20 @@
     "@types/multer": "^1.4.12",
     "@types/node": "^22.5.4",
     "@types/nodemailer": "^6.4.17",
+    "@types/react": "^19.1.6",
     "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   },
   "dependencies": {
+    "@tiptap/core": "^2.12.0",
+    "@tiptap/html": "^2.12.0",
+    "@tiptap/pm": "^2.12.0",
+    "@tiptap/starter-kit": "^2.12.0",
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/mongoose-unique-validator": "^1.0.9",
+    "@types/react-dom": "^19.1.5",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cloudinary": "^2.5.0",
@@ -44,6 +50,8 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "sharp": "^0.33.5",
     "socket.io": "^4.8.1"
   }

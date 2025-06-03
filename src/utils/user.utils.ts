@@ -12,3 +12,20 @@ export const isValidInputPassword = (password: string): boolean => {
   });
   return haveNumber && haveLower && haveUpper && haveSpecial;
 };
+
+export const isBot = (userAgent: string = ''): boolean => {
+  const bots = [
+    'Googlebot',
+    'Bingbot',
+    'Slurp',
+    'DuckDuckBot',
+    'Baiduspider',
+    'YandexBot',
+    'Sogou',
+    'Exabot',
+    'facebot',
+    'facebookexternalhit',
+    'ia_archiver'
+  ];
+  return bots.some((bot) => userAgent.toLowerCase().includes(bot.toLowerCase()));
+};

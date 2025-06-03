@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
 import postService from '../services/post.service';
+import ReactDOMServer from 'react-dom/server';
+import { isBot } from '../utils/user.utils';
+import Post from '../components/post';
+import fs from 'fs';
+import path from 'path';
 
 // create post
 export const createPost = async (request: Request, response: Response) => {
@@ -16,6 +21,15 @@ export const createPost = async (request: Request, response: Response) => {
 // get posts
 export const getPosts = async (request: Request, response: Response) => {
   try {
+    const userAgent = request.headers['user-agent'] || '';
+    const isBotVisitor = isBot(userAgent);
+
+    if (isBotVisitor) {
+      const templatePath = path.resolve(__dirname, '../views/template.html');
+      const template = fs.readFileSync(templatePath, 'utf8');
+      return response.send(template);
+    }
+
     const { page, limit, userId, groupId, type } = request.query;
     if (limit === '0') {
       const result = await postService.getPostsForAdmin({
@@ -102,7 +116,22 @@ export const getPostById = async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
     const { userEmail } = request.query;
-    const result = await postService.getPostById(id, userEmail as string);
+    const result = (await postService.getPostById(id, userEmail as string)) as {
+      message: string;
+      data: any;
+    };
+    const userAgent = request.headers['user-agent'] || '';
+    const isBotVisitor = isBot(userAgent);
+
+    if (isBotVisitor) {
+      const appHtml = ReactDOMServer.renderToString(<Post post={result?.data} />);
+
+      const templatePath = path.resolve(__dirname, '../views/template.html');
+      const template = fs.readFileSync(templatePath, 'utf8');
+
+      const html = template.replace('<!--APP-->', appHtml).replace('<!--TITLE-->', result?.data?.title || 'Post');
+      return response.send(html);
+    }
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
