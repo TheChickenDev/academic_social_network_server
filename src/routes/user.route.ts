@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import { upload, uploadUserImagesToCloudinary } from '../middlewares/upload.middleware';
 import {
   createUser,
@@ -25,7 +25,13 @@ router.post('/login-google', loginWithGoogle);
 router.post('/refresh-token', refreshToken);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
-router.patch('/', authUserMiddleware, upload.array('images', 1), uploadUserImagesToCloudinary, updateUser);
+router.patch(
+  '/',
+  authUserMiddleware,
+  upload.array('images', 1) as unknown as RequestHandler,
+  uploadUserImagesToCloudinary,
+  updateUser
+);
 router.delete('/', authAdminMiddleware, deleteUser);
 router.patch('/friends', authUserMiddleware, controlFriendRequest);
 router.get('/friends', getFriends);
