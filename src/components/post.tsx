@@ -21,11 +21,11 @@ const Post: React.FC<Props> = ({ post }) => {
 
         <section itemProp='articleBody'>{generateHTML(post.content, [StarterKit])}</section>
 
-        {post.tags?.length > 0 && (
+        {Array.isArray(post.tags) && post.tags.length > 0 && (
           <footer>
             <h2>Tags</h2>
             <ul>
-              {post.tags.map((tag, idx) => (
+              {post.tags?.map((tag, idx) => (
                 <li key={idx}>
                   <a href={`/tags/${encodeURIComponent(tag)}`} rel='tag'>
                     {tag}

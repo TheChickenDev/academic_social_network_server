@@ -10,7 +10,7 @@ const generateAccessToken = async (payload: TokenPayload) => {
     {
       ...payload
     },
-    process.env.ACCESS_TOKEN,
+    process.env.ACCESS_TOKEN ?? '',
     { expiresIn: '5m' }
   );
   return access_token;
@@ -21,7 +21,7 @@ const generateRefreshToken = async (payload: TokenPayload) => {
     {
       ...payload
     },
-    process.env.REFRESH_TOKEN,
+    process.env.REFRESH_TOKEN ?? '',
     { expiresIn: '365d' }
   );
   return refresh_token;
@@ -30,29 +30,41 @@ const generateRefreshToken = async (payload: TokenPayload) => {
 export const refreshTokenService = (token: string) => {
   return new Promise((resolve, reject) => {
     try {
-      jwt.verify(token, process.env.REFRESH_TOKEN, async (err, user: TokenPayload) => {
-        if (err) {
+      jwt.verify(token, process.env.REFRESH_TOKEN ?? '', (err, decoded) => {
+        if (err || !decoded || typeof decoded !== 'object') {
           resolve({
             status: 'ERR',
             message: 'THE AUTHENTICATION'
           });
+          return;
         }
-        const access_token = await generateAccessToken({
+        const user = decoded as TokenPayload;
+        generateAccessToken({
           _id: user?._id,
           email: user?.email,
           isAdmin: user?.isAdmin,
           fullName: user?.fullName,
           avatar: user?.avatar
-        });
-        UserModel.findById(user._id).then((res: User) => {
-          res.accessToken = access_token;
-          res.save();
-        });
-        resolve({
-          status: 'OK',
-          message: 'REFRESH TOKEN SUCCESSFUL',
-          data: access_token
-        });
+        })
+          .then((access_token) => {
+            UserModel.findById(user._id).then((res) => {
+              if (res) {
+                res.accessToken = access_token;
+                res.save();
+              }
+            });
+            resolve({
+              status: 'OK',
+              message: 'REFRESH TOKEN SUCCESSFUL',
+              data: access_token
+            });
+          })
+          .catch((error) => {
+            resolve({
+              status: 'ERR',
+              message: 'FAILED TO GENERATE ACCESS TOKEN'
+            });
+          });
       });
     } catch (error) {
       reject(error);
@@ -69,7 +81,7 @@ export const generateResetPasswordToken = async (email: string) => {
       key: randomNumber,
       date: currentDate.toISOString()
     },
-    process.env.ACCESS_TOKEN,
+    process.env.ACCESS_TOKEN ?? '',
     { expiresIn: '10m' }
   );
   return { reset_token, randomNumber };

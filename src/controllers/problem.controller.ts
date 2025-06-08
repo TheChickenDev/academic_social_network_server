@@ -14,7 +14,7 @@ export const createProblem = async (req: Request, res: Response) => {
     return res.status(201).json(contest);
   } catch (error) {
     return res.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -25,14 +25,14 @@ export const getProblems = async (req: Request, res: Response) => {
     const problems = await problemService.getProblems({
       page: parseInt(page as string, 10) ?? 1,
       limit: parseInt(limit as string, 10) ?? 100,
-      contestId: typeof contestId === 'string' ? contestId : undefined,
-      problemId: typeof problemId === 'string' ? problemId : undefined,
-      userId: typeof userId === 'string' ? userId : undefined
+      contestId: contestId as string,
+      problemId: problemId as string,
+      userId: userId as string
     });
     return res.status(200).json(problems);
   } catch (error) {
     return res.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -51,7 +51,7 @@ export const updateProblem = async (req: Request, res: Response) => {
     return res.status(200).json(contest);
   } catch (error) {
     return res.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -101,7 +101,7 @@ export const createSubmission = async (req: Request, res: Response) => {
     return res.status(201).json(contestSubminssion);
   } catch (error) {
     return res.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };

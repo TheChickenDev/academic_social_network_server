@@ -34,6 +34,9 @@ const createMessage = async ({
         });
       }
       const conversation = await ConversationModel.findById(conversationId);
+      if (!conversation) {
+        return reject(new Error('Conversation not found'));
+      }
       conversation.updatedAt = new Date();
       await conversation.save();
       const newMessage = await MessageModel.create({
@@ -46,7 +49,7 @@ const createMessage = async ({
         data: newMessage
       });
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error instanceof Error ? error.message : String(error));
     }
   });
 };
@@ -86,7 +89,7 @@ const getMessages = async ({
         data: result
       });
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error instanceof Error ? error.message : String(error));
     }
   });
 };

@@ -44,7 +44,7 @@ export const searchController = async (request: Request, response: Response) => 
     });
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };

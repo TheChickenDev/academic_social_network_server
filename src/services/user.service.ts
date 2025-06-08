@@ -68,7 +68,7 @@ const createUser = (newUserData: CreateUserInput) => {
 const login = (email: string, password: string) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email });
+      const user = await UserModel.findOne({ email });
       if (!user) {
         return reject({
           message: 'Account does not exist!'
@@ -113,7 +113,7 @@ const login = (email: string, password: string) => {
 const loginWithGoogle = (data: { email: string; name: string; googleId: string; avatar: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let user: User = await UserModel.findOne({
+      let user = await UserModel.findOne({
         $or: [
           {
             googleId: data.googleId
@@ -123,7 +123,7 @@ const loginWithGoogle = (data: { email: string; name: string; googleId: string; 
           }
         ]
       });
-      // let user: User = await UserModel.findOne({ googleId: data.googleId });
+      // let user = await UserModel.findOne({ googleId: data.googleId });
       if (!user) {
         const hashPassword = bcrypt.hashSync(data.email + data.googleId, 12);
         user = await UserModel.create({
@@ -174,7 +174,7 @@ const forgotPassword = ({ email, baseURL }: { email: string; baseURL: string }) 
         return reject({ message: 'No user found' });
       }
 
-      const token = jwt.sign({ id: user._id, email }, process.env.REFRESH_TOKEN, { expiresIn: '15m' });
+      const token = jwt.sign({ id: user._id, email }, process.env.REFRESH_TOKEN ?? '', { expiresIn: '15m' });
       user.resetPasswordToken = token;
       user.resetPasswordExpire = new Date(Date.now() + 900000); // 15 minutes
       await user.save();
@@ -204,7 +204,7 @@ const forgotPassword = ({ email, baseURL }: { email: string; baseURL: string }) 
 const resetPassword = async ({ token, password }: { token: string; password: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const decoded = jwt.verify(token, process.env.REFRESH_TOKEN);
+      const decoded = jwt.verify(token, process.env.REFRESH_TOKEN ?? '');
       if (typeof decoded === 'string' || !decoded.email) {
         return reject({ message: 'Invalid or expired password reset token' });
       }
@@ -222,8 +222,8 @@ const resetPassword = async ({ token, password }: { token: string; password: str
 
       const hashPassword = bcrypt.hashSync(password, 12);
       user.password = hashPassword;
-      user.resetPasswordToken = null;
-      user.resetPasswordExpire = null;
+      user.resetPasswordToken = '';
+      user.resetPasswordExpire = new Date(0); // Set to epoch as a placeholder for "no expiration"
       await user.save();
 
       const mailOptions = {
@@ -269,7 +269,7 @@ const updateUser = (data: UpdateUserInput) => {
       }
 
       if (introduction?.contact?.phone) {
-        const user: User = await UserModel.findOne({ 'introduction.contact.phone': introduction.contact.phone });
+        const user = await UserModel.findOne({ 'introduction.contact.phone': introduction.contact.phone });
         if (user && user._id.toString() !== userId) {
           return reject({
             message: 'Phone number already exists!'
@@ -299,7 +299,7 @@ const updateUser = (data: UpdateUserInput) => {
         newData = { ...newData, avatarImg: { url: data.cloudinaryUrl, publicId: data.publicId } };
       }
 
-      const user: User = await UserModel.findByIdAndUpdate(userId, newData, { new: true });
+      const user = await UserModel.findByIdAndUpdate(userId, newData, { new: true });
 
       if (!user) {
         return reject({
@@ -332,14 +332,14 @@ const updateUser = (data: UpdateUserInput) => {
 const deleteUser = (userId: string) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findByIdAndDelete(userId);
+      const user = await UserModel.findByIdAndDelete(userId);
       if (!user) {
         return reject({
           message: 'User not found!'
         });
       }
       for (let i = 0; i < user.friends.length; i++) {
-        const friend: User = await UserModel.findById(user.friends[i].friendId);
+        const friend = await UserModel.findById(user.friends[i].friendId);
         if (!friend) {
           continue;
         }
@@ -367,7 +367,7 @@ const deleteUser = (userId: string) => {
 const getUser = ({ userId }: UserQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findById(userId);
+      const user = await UserModel.findById(userId);
       if (!user) {
         return reject({
           message: 'User not found!'
@@ -419,12 +419,14 @@ const getUsers = (query: UserQuery) => {
           data: users.map((user) => ({ ...user.toObject(), avatarImg: user.avatarImg?.url ?? null }))
         });
       }
-      const skip = (query?.page - 1) * query?.limit;
+      const page = query.page ?? 1;
+      const limit = query.limit ?? 10;
+      const skip = (page - 1) * limit;
       const users = await UserModel.find({ _id: { $nin: exceptIds }, isAdmin: false })
         .select('email fullName points rank avatarImg')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(query.limit);
+        .limit(limit);
       if (!users) {
         return reject({
           message: 'No user found!'
@@ -445,13 +447,13 @@ const getUsers = (query: UserQuery) => {
 const addFriend = (data: { _id: string; friendId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findById(data._id);
+      const user = await UserModel.findById(data._id);
       if (!user) {
         return reject({
           message: 'User not found!'
         });
       }
-      const friend: User = await UserModel.findById(data.friendId);
+      const friend = await UserModel.findById(data.friendId);
       if (!friend) {
         return reject({
           message: 'Friend not found!'
@@ -486,13 +488,13 @@ const addFriend = (data: { _id: string; friendId: string }) => {
 const acceptFriend = (data: { _id: string; friendId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findById(data._id);
+      const user = await UserModel.findById(data._id);
       if (!user) {
         return reject({
           message: 'User not found!'
         });
       }
-      const friend: User = await UserModel.findById(data.friendId);
+      const friend = await UserModel.findById(data.friendId);
       if (!friend) {
         return reject({
           message: 'Friend not found!'
@@ -533,13 +535,13 @@ const acceptFriend = (data: { _id: string; friendId: string }) => {
 const removeFriend = (data: { _id: string; friendId: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findById(data._id);
+      const user = await UserModel.findById(data._id);
       if (!user) {
         return reject({
           message: 'User not found!'
         });
       }
-      const friend: User = await UserModel.findById(data.friendId);
+      const friend = await UserModel.findById(data.friendId);
       if (!friend) {
         return reject({
           message: 'Friend not found!'
@@ -580,14 +582,14 @@ const removeFriend = (data: { _id: string; friendId: string }) => {
 const getFriends = (data: { _id: string; status: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findById(data._id);
+      const user = await UserModel.findById(data._id);
       if (!user) {
         reject({
           message: 'User not found!'
         });
       }
       const result = await UserModel.find({
-        _id: { $in: user.friends.filter((f) => f.status === data.status).map((f) => f.friendId) }
+        _id: { $in: user?.friends.filter((f) => f.status === data.status).map((f) => f.friendId) }
       }).select('_id fullName points rank avatarImg');
 
       resolve({
@@ -605,9 +607,9 @@ const getFriends = (data: { _id: string; status: string }) => {
 const blockUser = (data: { email: string }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findOne({ email: data.email });
+      const user = await UserModel.findOne({ email: data.email });
       if (!user) {
-        reject({
+        return reject({
           message: 'User not found!'
         });
       }

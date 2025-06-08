@@ -14,7 +14,7 @@ export const getConversations = async (request: Request, response: Response) => 
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };

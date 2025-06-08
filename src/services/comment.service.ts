@@ -32,8 +32,8 @@ const comment = (commentData: Comment) => {
         message: 'Comment successful!',
         data: {
           ...newComment.toObject(),
-          ownerName: user.fullName,
-          ownerAvatar: user.avatarImg?.url
+          ownerName: user?.fullName,
+          ownerAvatar: user?.avatarImg?.url
         }
       });
     } catch (error) {
@@ -75,8 +75,8 @@ const replyComment = (replyData: Comment) => {
         message: 'Comment successful!',
         data: {
           ...newReply.toObject(),
-          ownerName: user.fullName,
-          ownerAvatar: user.avatarImg?.url
+          ownerName: user?.fullName,
+          ownerAvatar: user?.avatarImg?.url
         }
       });
     } catch (error) {
@@ -89,11 +89,13 @@ const replyComment = (replyData: Comment) => {
 const likeComment = (commentId: string, userId: string) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let comment: Document<unknown, {}, Comment> &
-        Comment &
-        Required<{
-          _id: string;
-        }> = null;
+      let comment:
+        | (Document<unknown, {}, Comment> &
+            Comment &
+            Required<{
+              _id: string;
+            }>)
+        | null = null;
 
       comment = await CommentModel.findById(commentId);
 
@@ -113,8 +115,8 @@ const likeComment = (commentId: string, userId: string) => {
           comment.likedBy.map(async (id) => {
             const likedInfo = await UserModel.findById(id).select('_id fullName');
             return {
-              userId: likedInfo._id,
-              userName: likedInfo.fullName
+              userId: likedInfo?._id,
+              userName: likedInfo?.fullName
             };
           })
         );
@@ -133,8 +135,8 @@ const likeComment = (commentId: string, userId: string) => {
         comment.likedBy.map(async (id) => {
           const likedInfo = await UserModel.findById(id).select('_id fullName');
           return {
-            userId: likedInfo._id,
-            userName: likedInfo.fullName
+            userId: likedInfo?._id,
+            userName: likedInfo?.fullName
           };
         })
       );
@@ -155,11 +157,13 @@ const likeComment = (commentId: string, userId: string) => {
 const dislikeComment = (commentId: string, userId: string) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let comment: Document<unknown, {}, Comment> &
-        Comment &
-        Required<{
-          _id: string;
-        }> = null;
+      let comment:
+        | (Document<unknown, {}, Comment> &
+            Comment &
+            Required<{
+              _id: string;
+            }>)
+        | null = null;
 
       comment = await CommentModel.findById(commentId);
 
@@ -179,8 +183,8 @@ const dislikeComment = (commentId: string, userId: string) => {
           comment.dislikedBy.map(async (id) => {
             const dislikedInfo = await UserModel.findById(id).select('_id fullName');
             return {
-              userId: dislikedInfo._id,
-              userName: dislikedInfo.fullName
+              userId: dislikedInfo?._id,
+              userName: dislikedInfo?.fullName
             };
           })
         );
@@ -199,8 +203,8 @@ const dislikeComment = (commentId: string, userId: string) => {
         comment.dislikedBy.map(async (id) => {
           const dislikedInfo = await UserModel.findById(id).select('_id fullName');
           return {
-            userId: dislikedInfo._id,
-            userName: dislikedInfo.fullName
+            userId: dislikedInfo?._id,
+            userName: dislikedInfo?.fullName
           };
         })
       );
@@ -236,8 +240,8 @@ const getCommentsByPostId = (query: CommentQuery) => {
             comment.likedBy.map(async (id) => {
               const likedInfo = await UserModel.findById(id).select('_id fullName');
               return {
-                userId: likedInfo._id,
-                userName: likedInfo.fullName
+                userId: likedInfo?._id,
+                userName: likedInfo?.fullName
               };
             })
           );
@@ -245,8 +249,8 @@ const getCommentsByPostId = (query: CommentQuery) => {
             comment.dislikedBy.map(async (id) => {
               const dislikedInfo = await UserModel.findById(id).select('_id fullName');
               return {
-                userId: dislikedInfo._id,
-                userName: dislikedInfo.fullName
+                userId: dislikedInfo?._id,
+                userName: dislikedInfo?.fullName
               };
             })
           );
@@ -256,8 +260,8 @@ const getCommentsByPostId = (query: CommentQuery) => {
                 reply.likedBy.map(async (id) => {
                   const likedInfo = await UserModel.findById(id).select('_id fullName');
                   return {
-                    userId: likedInfo._id,
-                    userName: likedInfo.fullName
+                    userId: likedInfo?._id,
+                    userName: likedInfo?.fullName
                   };
                 })
               );
@@ -265,8 +269,8 @@ const getCommentsByPostId = (query: CommentQuery) => {
                 reply.dislikedBy.map(async (id) => {
                   const dislikedInfo = await UserModel.findById(id).select('_id fullName');
                   return {
-                    userId: dislikedInfo._id,
-                    userName: dislikedInfo.fullName
+                    userId: dislikedInfo?._id,
+                    userName: dislikedInfo?.fullName
                   };
                 })
               );
@@ -275,8 +279,8 @@ const getCommentsByPostId = (query: CommentQuery) => {
                 ...reply.toObject(),
                 likedBy,
                 dislikedBy,
-                ownerName: user.fullName,
-                ownerAvatar: user.avatarImg?.url
+                ownerName: user?.fullName,
+                ownerAvatar: user?.avatarImg?.url
               };
             })
           );
@@ -286,8 +290,8 @@ const getCommentsByPostId = (query: CommentQuery) => {
             replies: handledReplies,
             likedBy,
             dislikedBy,
-            ownerName: user.fullName,
-            ownerAvatar: user.avatarImg?.url
+            ownerName: user?.fullName,
+            ownerAvatar: user?.avatarImg?.url
           };
         })
       );

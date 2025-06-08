@@ -14,7 +14,7 @@ export const createGroup = async (request: Request, response: Response) => {
       }
     }
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -65,7 +65,7 @@ export const getGroups = async (request: Request, response: Response) => {
     }
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -78,7 +78,7 @@ export const updateGroup = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -91,7 +91,7 @@ export const deleteGroup = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -109,7 +109,7 @@ export const getMembers = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -137,7 +137,7 @@ export const memberRequestController = async (request: Request, response: Respon
     }
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -154,7 +154,7 @@ export const getPosts = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -173,7 +173,7 @@ export const postRequestController = async (request: Request, response: Response
     }
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };

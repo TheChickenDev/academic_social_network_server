@@ -84,7 +84,7 @@ export const searchAll = ({ q, userId }: { q: string; userId: string }) => {
 
 // search posts
 
-export const searchPosts = ({ q, filter, page, limit }: SearchQueryParams) => {
+export const searchPosts = ({ q, filter, page = 1, limit = 10 }: SearchQueryParams) => {
   return new Promise(async (resolve, reject) => {
     try {
       let posts: Post[] = [];
@@ -139,7 +139,7 @@ export const searchPosts = ({ q, filter, page, limit }: SearchQueryParams) => {
 
 // search users
 
-export const searchUsers = ({ q, filter, page, limit, userId }: SearchQueryParams) => {
+export const searchUsers = ({ q, filter, page = 1, limit = 10, userId }: SearchQueryParams) => {
   return new Promise(async (resolve, reject) => {
     try {
       const user = await UserModel.findById(userId).select('friends');
@@ -187,7 +187,7 @@ export const searchUsers = ({ q, filter, page, limit, userId }: SearchQueryParam
 
 // search groups
 
-export const searchGroups = ({ q, filter, page, limit, userId }: SearchQueryParams) => {
+export const searchGroups = ({ q, filter, page = 1, limit = 10, userId }: SearchQueryParams) => {
   return new Promise(async (resolve, reject) => {
     try {
       let groups: Group[] = [];

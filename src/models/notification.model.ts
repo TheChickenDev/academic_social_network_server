@@ -52,12 +52,12 @@ notificationSchema.post('save', async function (doc) {
     console.log('--------------', socketId);
 
     if (socketId) {
-      io.to(socketId).emit('notify', {
+      io?.to(socketId).emit('notify', {
         ...doc.toObject(),
         userName: userName?.fullName,
         avatarImg: userName?.avatarImg?.url,
         groupName: groupName?.name,
-        time: getRelativeTime(doc.createdAt)
+        time: doc.createdAt ? getRelativeTime(doc.createdAt) : ''
       });
     }
   });

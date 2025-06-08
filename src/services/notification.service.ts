@@ -15,7 +15,7 @@ export const createNotification = (notification: Notification) => {
         data: newNotification
       });
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error instanceof Error ? error.message : String(error));
     }
   });
 };
@@ -40,13 +40,13 @@ export const getNotifications = async ({ userId, page, limit }: { userId: string
               userName: userName?.fullName,
               avatarImg: userName?.avatarImg?.url,
               groupName: groupName?.name,
-              time: getRelativeTime(notification.createdAt)
+              time: notification.createdAt ? getRelativeTime(notification.createdAt) : ''
             };
           })
         )
       });
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error instanceof Error ? error.message : String(error));
     }
   });
 };

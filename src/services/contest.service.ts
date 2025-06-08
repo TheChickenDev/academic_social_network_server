@@ -39,7 +39,7 @@ const getContests = async ({
           data: {
             ...contest.toObject(),
             participants: await Promise.all(
-              contest.participants?.map(async (c) => {
+              (contest.participants ?? []).map(async (c) => {
                 const user = await UserModel.findById(c.userId).select('fullName avatarImg email rank');
                 return {
                   score: c.score,

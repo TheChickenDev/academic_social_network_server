@@ -23,7 +23,7 @@ export const createUser = async (request: Request, response: Response) => {
     return response.status(201).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -36,7 +36,7 @@ export const login = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -48,7 +48,7 @@ export const loginWithGoogle = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -62,7 +62,7 @@ export const forgotPassword = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -87,7 +87,7 @@ export const resetPassword = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -102,7 +102,7 @@ export const updateUser = async (request: Request, response: Response) => {
       await cloudinary.uploader.destroy(request.body.publicId);
     }
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -115,7 +115,7 @@ export const deleteUser = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -138,7 +138,7 @@ export const getUser = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -163,7 +163,7 @@ export const controlFriendRequest = async (request: Request, response: Response)
     });
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -177,7 +177,7 @@ export const getFriends = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -189,7 +189,7 @@ export const blockUser = async (request: Request, response: Response) => {
     return response.status(200).json(result);
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -230,7 +230,7 @@ export const controlPostRequest = async (request: Request, response: Response) =
     });
   } catch (error) {
     return response.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };

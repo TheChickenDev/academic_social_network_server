@@ -405,8 +405,8 @@ const deletePost = (id: string) => {
   return new Promise(async (resolve, reject) => {
     try {
       const post = await PostModel.findByIdAndDelete(id);
-      if (post.groupId) {
-        const group = await GroupModel.findOne({ _id: post.groupId });
+      if (post?.groupId) {
+        const group = await GroupModel.findOne({ _id: post?.groupId });
         if (!group) {
           return reject({ message: 'Group not found!' });
         }

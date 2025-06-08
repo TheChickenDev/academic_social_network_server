@@ -41,7 +41,7 @@ messageSchema.post('save', async function (doc) {
   conversation.userIds?.forEach((userId) => {
     const socketId = getSocketId(userId);
     if (socketId) {
-      io.to(socketId).emit('chat message', doc);
+      io?.to(socketId).emit('chat message', doc);
     }
   });
 });

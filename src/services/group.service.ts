@@ -16,7 +16,7 @@ const createGroup = (data: {
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findById(data.ownerId);
+      const user = await UserModel.findById(data.ownerId);
       if (!user) {
         reject({
           message: 'User not found!'
@@ -31,7 +31,7 @@ const createGroup = (data: {
       } = {
         name: data.name,
         description: data.description,
-        ownerId: user._id.toString()
+        ownerId: user?._id.toString() ?? ''
       };
       if (data.cloudinaryUrls && data.cloudinaryUrls[0]) {
         newGroupData = { ...newGroupData, avatarImg: { url: data.cloudinaryUrls[0], publicId: data.publicIds[0] } };
@@ -40,7 +40,7 @@ const createGroup = (data: {
         newGroupData = { ...newGroupData, backgroundImg: { url: data.cloudinaryUrls[1], publicId: data.publicIds[1] } };
       }
       const newGroup = await GroupModel.create(newGroupData);
-      await user.save();
+      await user?.save();
       resolve({
         message: 'Create group successful!',
         data: newGroup
@@ -56,9 +56,11 @@ const createGroup = (data: {
 const getGroupsForAdmin = ({ page, limit }: GroupQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
+      const safePage = page ?? 1;
+      const safeLimit = limit ?? 10;
       const groups = await GroupModel.find()
-        .skip((page - 1) * limit)
-        .limit(limit);
+        .skip((safePage - 1) * safeLimit)
+        .limit(safeLimit);
       if (!groups) {
         return reject({
           message: 'Group not found!'
@@ -159,9 +161,11 @@ const getGroupById = ({ id, userId }: GroupQuery) => {
 const getOwnGroups = ({ userId, page, limit }: GroupQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
+      const safePage = page ?? 1;
+      const safeLimit = limit ?? 10;
       const groups = await GroupModel.find({ ownerId: userId })
-        .skip((page - 1) * limit)
-        .limit(limit);
+        .skip((safePage - 1) * safeLimit)
+        .limit(safeLimit);
       if (!groups) {
         return reject({
           message: 'Group not found!'
@@ -190,14 +194,16 @@ const getOwnGroups = ({ userId, page, limit }: GroupQuery) => {
 const getRandomGroups = ({ userId, page, limit }: GroupQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const skip = (page - 1) * limit;
+      const safePage = page ?? 1;
+      const safeLimit = limit ?? 10;
+      const skip = (safePage - 1) * safeLimit;
       const groups = await GroupModel.find({
         ownerId: { $ne: userId },
         'members.userId': { $nin: [userId] }
       })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit);
+        .limit(safeLimit);
       if (!groups) {
         return reject({
           message: 'Group not found!'
@@ -230,14 +236,16 @@ const getRandomGroups = ({ userId, page, limit }: GroupQuery) => {
 const getJoinedGroups = ({ userId, page, limit }: GroupQuery) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const skip = (page - 1) * limit;
+      const safePage = page ?? 1;
+      const safeLimit = limit ?? 10;
+      const skip = (safePage - 1) * safeLimit;
       const groups = await GroupModel.find({
         ownerId: { $ne: userId },
         'members.userId': { $in: [userId] }
       })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit);
+        .limit(safeLimit);
       if (!groups) {
         return reject({
           message: 'Group not found!'
@@ -568,9 +576,9 @@ const getPosts = ({ id, postStatus }: GroupQuery) => {
             return {
               _id: post._id,
               title: post.title,
-              ownerName: user.fullName,
-              ownerId: user._id,
-              ownerAvatar: user.avatarImg?.url,
+              ownerName: user?.fullName,
+              ownerId: user?._id,
+              ownerAvatar: user?.avatarImg?.url,
               createdAt: post.createdAt
             };
           })

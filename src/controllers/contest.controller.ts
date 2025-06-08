@@ -15,7 +15,7 @@ export const createContest = async (req: Request, res: Response) => {
     return res.status(201).json(contest);
   } catch (error) {
     return res.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -24,15 +24,15 @@ export const getContests = async (req: Request, res: Response) => {
   try {
     const { title, startDate, endDate, contestId } = req.query;
     const contests = await contestService.getContests({
-      title: typeof title === 'string' ? title : undefined,
-      startDate: typeof startDate === 'string' ? startDate : undefined,
-      endDate: typeof endDate === 'string' ? endDate : undefined,
-      contestId: typeof contestId === 'string' ? contestId : undefined
+      title: title as string,
+      startDate: startDate as string,
+      endDate: endDate as string,
+      contestId: contestId as string
     });
     return res.status(200).json(contests);
   } catch (error) {
     return res.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };
@@ -51,7 +51,7 @@ export const updateContest = async (req: Request, res: Response) => {
     return res.status(200).json(contest);
   } catch (error) {
     return res.status(400).json({
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 };

@@ -43,12 +43,12 @@ const getProblems = async ({
         return resolve({
           message: 'Problem fetched successfully!',
           data: {
-            title: problem.title,
-            description: problem.description,
-            difficulty: problem.difficulty,
-            testCases: problem.testCases,
-            sampleCode: problem.sampleCode,
-            _id: problem._id,
+            title: problem?.title,
+            description: problem?.description,
+            difficulty: problem?.difficulty,
+            testCases: problem?.testCases,
+            sampleCode: problem?.sampleCode,
+            _id: problem?._id,
             isSolved: submission.length > 0,
             submitedCode: submission[0]?.code
           }

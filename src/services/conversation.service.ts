@@ -9,11 +9,12 @@ import MessageModel from '../models/message.model';
 const getConversations = async ({ userId, page, limit }: { userId: string; page: number; limit: number }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user: User = await UserModel.findById(userId);
+      const user = await UserModel.findById(userId);
       if (!user) {
         reject({
           message: 'User not found!'
         });
+        return;
       }
       const friends = await UserModel.find({
         _id: { $in: user.friends.filter((f) => f.status === 'accepted').map((f) => f.friendId) }
@@ -52,7 +53,7 @@ const getConversations = async ({ userId, page, limit }: { userId: string; page:
         data: result
       });
     } catch (error) {
-      throw new Error(error);
+      throw new Error(String(error));
     }
   });
 };
