@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import routes from '../src/routes';
+import routes from './routes';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
