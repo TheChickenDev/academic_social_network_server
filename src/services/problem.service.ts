@@ -1,3 +1,4 @@
+import ContestModel from '../models/contest.model';
 import { ContestProblem, ContestSubmission } from '../interfaces/contest.interface';
 import ContestProblemModel from '../models/contest-problem.model';
 import ContestSubmissionModel from '../models/contest-submission.model';
@@ -32,8 +33,9 @@ const getProblems = async ({
   return new Promise(async (resolve, reject) => {
     try {
       if (problemId) {
-        const contest = await ContestProblemModel.findById(problemId);
+        const problem = await ContestProblemModel.findById(problemId);
         const submission = await ContestSubmissionModel.find({
+          contestId,
           problemId,
           userId
         });
@@ -41,12 +43,12 @@ const getProblems = async ({
         return resolve({
           message: 'Problem fetched successfully!',
           data: {
-            title: contest.title,
-            description: contest.description,
-            difficulty: contest.difficulty,
-            testCases: contest.testCases,
-            sampleCode: contest.sampleCode,
-            _id: contest._id,
+            title: problem.title,
+            description: problem.description,
+            difficulty: problem.difficulty,
+            testCases: problem.testCases,
+            sampleCode: problem.sampleCode,
+            _id: problem._id,
             isSolved: submission.length > 0,
             submitedCode: submission[0]?.code
           }
@@ -81,6 +83,7 @@ const createSubmission = async (submissionData: ContestSubmission) => {
   return new Promise(async (resolve, reject) => {
     try {
       const submission = await ContestSubmissionModel.create(submissionData);
+      ContestModel.findByIdAndUpdate;
       resolve({
         message: 'Submission created successfully!',
         data: submission

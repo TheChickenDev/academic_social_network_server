@@ -53,9 +53,9 @@ export interface ContestSubmission {
   _id?: ObjectId;
   userId: ObjectId;
   problemId: ObjectId;
+  contestId: ObjectId;
   language: string;
   code: string;
-  status?: 'pending' | 'accepted' | 'wrong answer' | 'runtime error' | 'compilation error';
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -1,3 +1,4 @@
+import UserModel from '../models/user.model';
 import { Contest } from '../interfaces/contest.interface';
 import ContestModel from '../models/contest.model';
 
@@ -26,7 +27,6 @@ const getContests = async ({
   endDate: string;
   contestId: string;
 }) => {
-  console.log(contestId);
   return new Promise(async (resolve, reject) => {
     try {
       if (contestId) {
@@ -36,7 +36,21 @@ const getContests = async ({
         }
         return resolve({
           message: 'Contest fetched successfully',
-          data: contest
+          data: {
+            ...contest.toObject(),
+            participants: await Promise.all(
+              contest.participants?.map(async (c) => {
+                const user = await UserModel.findById(c.userId).select('fullName avatarImg email rank');
+                return {
+                  score: c.score,
+                  userName: user?.fullName,
+                  userAvatar: user?.avatarImg?.url,
+                  userEmail: user?.email,
+                  userRank: user?.rank
+                };
+              })
+            )
+          }
         });
       }
       const query: any = {};

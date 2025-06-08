@@ -46,7 +46,8 @@ const contestSchema: Schema<Contest> = new Schema(
         score: {
           type: Number,
           default: 0
-        }
+        },
+        _id: false
       }
     ],
     hidden: {

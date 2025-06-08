@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import problemService from '../services/problem.service';
+import ContestModel from '../models/contest.model';
 
 export const createProblem = async (req: Request, res: Response) => {
   try {
@@ -57,14 +58,47 @@ export const updateProblem = async (req: Request, res: Response) => {
 
 export const createSubmission = async (req: Request, res: Response) => {
   try {
-    const { userId, problemId, code, language } = req.body;
-    const contest = await problemService.createSubmission({
+    const { userId, problemId, contestId, code, language } = req.body;
+
+    const isParticipated = await ContestModel.findOne({
+      _id: contestId,
+      'participants.userId': userId
+    });
+
+    if (isParticipated) {
+      await ContestModel.updateOne(
+        {
+          _id: contestId,
+          'participants.userId': userId
+        },
+        {
+          $inc: {
+            'participants.$.score': 1
+          }
+        }
+      );
+    } else {
+      await ContestModel.updateOne(
+        { _id: contestId },
+        {
+          $push: {
+            participants: {
+              userId,
+              score: 1
+            }
+          }
+        }
+      );
+    }
+
+    const contestSubminssion = await problemService.createSubmission({
       userId,
       problemId,
+      contestId,
       code,
       language
     });
-    return res.status(201).json(contest);
+    return res.status(201).json(contestSubminssion);
   } catch (error) {
     return res.status(400).json({
       message: error.message
