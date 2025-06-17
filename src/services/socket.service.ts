@@ -31,6 +31,49 @@ export const initializeSocketIO = (server: any) => {
       }
     );
 
+    socket.on(
+      'video call',
+      (data: {
+        conversationId: string;
+        senderId: string;
+        isVideoCall: boolean;
+        receiverId: string;
+        receiverName: string;
+        receiverAvatar: string;
+        stream?: MediaStream;
+      }) => {
+        console.log(`video call request from ${data.senderId} to ${data.receiverId}`);
+        const socketId = getSocketId(data?.receiverId);
+        if (socketId) {
+          io?.to(socketId).emit('incoming call', data);
+        }
+      }
+    );
+
+    socket.on('reject call', (data: { senderId: string; receiverId: string }) => {
+      const socketId = getSocketId(data?.receiverId);
+      if (socketId) {
+        io?.to(socketId).emit('reject call', data);
+      }
+    });
+
+    socket.on('webrtc signal', (data: { sdp: any; isCaller: boolean; senderId: string; receiverId: string }) => {
+      console.log('isCaller', data.isCaller);
+      if (data?.isCaller) {
+        console.log(`webrtc signal from ${data.senderId} to ${data.receiverId}`);
+        const socketId = getSocketId(data?.receiverId);
+        if (socketId) {
+          io?.to(socketId).emit('webrtc signal', data);
+        }
+      } else {
+        console.log(`webrtc signal from ${data.receiverId} to ${data.senderId}`);
+        const socketId = getSocketId(data?.senderId);
+        if (socketId) {
+          io?.to(socketId).emit('webrtc signal', data);
+        }
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log(`user disconnected: ${userId}`);
       userSocketMap.delete(userId);
