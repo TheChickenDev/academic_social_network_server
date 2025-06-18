@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongoose';
 
 interface MessageContent {
-  type: 'text' | 'image' | 'video' | 'audio' | 'icon';
+  type: 'text' | 'call' | 'missed-call';
   content: string;
 }
 

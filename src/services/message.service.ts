@@ -14,7 +14,7 @@ const createMessage = async ({
   conversationId: string;
   senderId: string;
   receiverId: string;
-  type: 'text' | 'image' | 'video' | 'audio' | 'icon';
+  type: 'text' | 'call' | 'missed-call';
   content: string;
 }) => {
   return new Promise(async (resolve, reject) => {

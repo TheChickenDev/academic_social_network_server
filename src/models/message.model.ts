@@ -18,7 +18,7 @@ const messageSchema: Schema<Message> = new Schema(
       {
         type: {
           type: String,
-          enum: ['text', 'image', 'video', 'audio', 'icon'],
+          enum: ['text', 'video-call', 'audio-call'],
           required: true
         },
         content: {
