@@ -63,6 +63,13 @@ export const initializeSocketIO = (server: any) => {
       }
     });
 
+    socket.on('hangup call', (data: { senderId: string; receiverId: string }) => {
+      const socketId = getSocketId(data?.receiverId);
+      if (socketId) {
+        io?.to(socketId).emit('reject call', data);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log(`user disconnected: ${userId}`);
       userSocketMap.delete(userId);
